@@ -1,0 +1,1259 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Остров КиберФин</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Unbounded:wght@600;800&display=swap">
+<style>
+/* Layout: морская карта — два острова-урока со станциями по порядку занятия; каждая игра открывается на «бумажном» листе поверх моря */
+:root{
+  --sea:#17a3ad; --sea-2:#0f8793; --sea-deep:#0b5867;
+  --paper:#fffaf0; --paper-2:#fff0d2; --sand:#f8dc96; --sand-2:#efc56d;
+  --ink:#15314a; --ink-soft:#4f6b7e; --on-accent:#1a2433;
+  --coral:#ff6a48; --sun:#ffbf2e; --leaf:#22a45d; --berry:#7457f0;
+  --ok:#1c9a52; --ok-bg:#dcf5e5; --bad:#d9443a; --bad-bg:#fde3df; --info-bg:#e3f3f6;
+  --line:rgba(21,49,74,.14); --wave:rgba(255,255,255,.16);
+  --lift:0 5px 0 rgba(11,88,103,.35);
+  --font-display:'Unbounded','Nunito',system-ui,sans-serif;
+  --font-body:'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sea:#0c3e4b; --sea-2:#0a3240; --sea-deep:#06212a;
+    --paper:#132b36; --paper-2:#1a3946; --sand:#4d4226; --sand-2:#6a5a2e;
+    --ink:#eaf5f3; --ink-soft:#a8c3ca;
+    --coral:#ff8668; --sun:#ffc94a; --leaf:#3ccb7c; --berry:#a08bff;
+    --ok:#4fd88d; --ok-bg:#163f2c; --bad:#ff7b70; --bad-bg:#4a2324; --info-bg:#173d4a;
+    --line:rgba(234,245,243,.14); --wave:rgba(255,255,255,.05);
+    --lift:0 5px 0 rgba(0,0,0,.45);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --sea:#0c3e4b; --sea-2:#0a3240; --sea-deep:#06212a;
+  --paper:#132b36; --paper-2:#1a3946; --sand:#4d4226; --sand-2:#6a5a2e;
+  --ink:#eaf5f3; --ink-soft:#a8c3ca;
+  --coral:#ff8668; --sun:#ffc94a; --leaf:#3ccb7c; --berry:#a08bff;
+  --ok:#4fd88d; --ok-bg:#163f2c; --bad:#ff7b70; --bad-bg:#4a2324; --info-bg:#173d4a;
+  --line:rgba(234,245,243,.14); --wave:rgba(255,255,255,.05);
+  --lift:0 5px 0 rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; min-height:100vh; color:var(--ink); font-family:var(--font-body); font-size:17px; line-height:1.5;
+  background:
+    radial-gradient(ellipse 22px 6px at 50% 50%, var(--wave) 0 60%, transparent 62%) 0 0/120px 70px,
+    radial-gradient(ellipse 22px 6px at 50% 50%, var(--wave) 0 60%, transparent 62%) 60px 35px/120px 70px,
+    linear-gradient(180deg, var(--sea) 0%, var(--sea-2) 60%, var(--sea-deep) 100%) fixed;
+  background-color:var(--sea);
+}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.wrap{max-width:1000px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.15}
+.eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0}
+.muted{color:var(--ink-soft)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+
+/* buttons */
+.btn{border:0;border-radius:14px;padding:12px 20px;font-weight:800;background:var(--paper-2);color:var(--ink);box-shadow:0 4px 0 var(--line);transition:transform .08s, box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.btn.primary{background:var(--sun);color:var(--on-accent);box-shadow:0 4px 0 var(--sand-2)}
+.btn.coral{background:var(--coral);color:var(--on-accent);box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.btn.ghost{background:transparent;box-shadow:inset 0 0 0 2px var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff}
+.brand{display:flex;align-items:center;gap:10px}
+.brand b{font-family:var(--font-display);font-size:1.05rem;display:block}
+.brand small{opacity:.85;font-weight:700}
+.logo{width:44px;height:44px;border-radius:50%;background:var(--sun);display:grid;place-items:center;font-size:1.5rem;box-shadow:var(--lift)}
+.top-actions{display:flex;gap:8px;align-items:center}
+.coins{display:inline-flex;align-items:center;gap:6px;background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:900;box-shadow:var(--lift);font-variant-numeric:tabular-nums}
+.icon-btn{width:42px;height:42px;border-radius:50%;border:0;background:var(--paper);color:var(--ink);box-shadow:var(--lift);font-size:1.15rem}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;margin:26px 0 22px;color:#fff}
+.hero h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:800;letter-spacing:-.01em}
+.hero h1 em{font-style:normal;color:var(--sun)}
+.hero p{max-width:52ch;margin:10px 0 0;font-weight:600;opacity:.95}
+.hero .eyebrow{color:var(--sun)}
+.compass{width:150px;aspect-ratio:1;max-width:100%;border-radius:50%;background:conic-gradient(var(--sun) calc(var(--p)*1%), rgba(255,255,255,.18) 0);display:grid;place-items:center;box-shadow:var(--lift)}
+.compass-in{width:78%;aspect-ratio:1;border-radius:50%;background:var(--paper);color:var(--ink);display:grid;place-content:center;text-align:center}
+.compass-in b{font-family:var(--font-display);font-size:1.6rem;line-height:1}
+.compass-in small{font-weight:800;color:var(--ink-soft);font-size:.78rem}
+
+/* islands */
+.island{background:var(--sand);border-radius:46px 90px 54px 110px / 60px 50px 80px 60px;padding:26px clamp(18px,4vw,36px) 30px;margin-bottom:26px;box-shadow:0 0 0 10px rgba(255,255,255,.12), var(--lift);position:relative}
+.island.second{border-radius:90px 46px 110px 54px / 50px 70px 60px 80px}
+.island-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:18px}
+.island-head h2{font-size:clamp(1.3rem,3.5vw,1.8rem)}
+.island-head p{flex-basis:100%;margin:0;color:var(--ink-soft);font-weight:700}
+.tag{display:inline-block;background:var(--ink);color:var(--paper);border-radius:999px;padding:3px 12px;font-size:.78rem;font-weight:900;letter-spacing:.04em}
+.route{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px}
+.stop{width:100%;height:100%;text-align:left;border:0;border-radius:22px;background:var(--paper);padding:14px 14px 12px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto 1fr;gap:4px 10px;box-shadow:0 5px 0 var(--sand-2);transition:transform .12s}
+.stop:hover{transform:translateY(-3px) rotate(-.6deg)}
+.stop-num{grid-row:1/3;width:40px;height:40px;border-radius:50%;background:var(--coral);color:var(--on-accent);display:grid;place-items:center;font-family:var(--font-display);font-weight:800}
+.stop.done .stop-num{background:var(--leaf)}
+.stop-ico{font-size:1.6rem;line-height:1;justify-self:end;grid-column:2;grid-row:1}
+.stop-title{grid-column:1/3;font-weight:900;line-height:1.25;margin-top:6px}
+.stop-meta{grid-column:1/3;align-self:end;font-size:.85rem;font-weight:800;color:var(--ink-soft)}
+.stop.done .stop-meta{color:var(--ok)}
+
+.cert{background:var(--paper);border-radius:28px;padding:28px;text-align:center;border:4px dashed var(--sun);margin-bottom:26px}
+.cert h2{font-size:clamp(1.5rem,4vw,2.2rem);color:var(--coral);margin:6px 0}
+.cert-name{font-family:var(--font-display);font-size:1.4rem;margin:4px 0}
+.cert-goal{margin:14px auto 0;max-width:46ch;background:var(--paper-2);border-radius:16px;padding:12px 16px;font-weight:700}
+.foot{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;color:#fff;font-weight:700;font-size:.9rem}
+.foot .btn{background:rgba(255,255,255,.15);color:#fff;box-shadow:none;padding:8px 14px;font-size:.9rem}
+
+/* game screen */
+.game-top{display:flex;align-items:center;gap:12px;color:#fff;margin-bottom:16px}
+.game-top .back{flex:none}
+.game-title{flex:1;min-width:0}
+.game-title h1{font-size:clamp(1.15rem,3.6vw,1.7rem)}
+.game-title .tag{background:rgba(255,255,255,.2);color:#fff;margin-bottom:6px}
+.sheet{background:var(--paper);border-radius:28px;padding:clamp(18px,4vw,34px);box-shadow:var(--lift);position:relative}
+.task{margin:0 0 18px;font-weight:700;font-size:1.05rem;background:var(--info-bg);border-radius:16px;padding:12px 16px}
+.feedback{position:sticky;bottom:12px;margin-top:18px;border-radius:16px;padding:12px 16px;font-weight:700;display:none;box-shadow:0 6px 20px rgba(0,0,0,.15);z-index:5}
+.feedback.show{display:block;animation:pop .25s ease}
+.feedback.ok{background:var(--ok-bg);color:var(--ink);border:2px solid var(--ok)}
+.feedback.bad{background:var(--bad-bg);color:var(--ink);border:2px solid var(--bad)}
+.feedback.info{background:var(--info-bg);color:var(--ink);border:2px solid var(--line)}
+.lead{font-weight:700;margin:0 0 12px}
+.hint{color:var(--ink-soft);font-weight:700;font-size:.92rem}
+.field{display:grid;gap:6px;margin-bottom:14px;font-weight:800}
+.field input,.field textarea,.inp{width:100%;border:2px solid var(--line);background:var(--paper-2);border-radius:14px;padding:10px 14px;font-weight:700}
+.field textarea{resize:vertical}
+.field input:focus,.field textarea:focus,.inp:focus{outline:none;border-color:var(--sun)}
+
+/* sorter */
+.bins{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.bin{border:3px dashed var(--line);border-radius:20px;padding:12px;background:var(--paper-2);min-height:150px;transition:transform .12s,border-color .12s;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.bin.over{border-color:var(--sun);transform:scale(1.03)}
+.bin.shake{animation:shake .35s}
+.bin-head{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:800;font-size:1rem}
+.bin-ico{font-size:1.5rem}
+.bin small{color:var(--ink-soft);font-weight:700;line-height:1.3}
+.bin-drop{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.bin-drop .chip-card{font-size:.85rem;padding:6px 10px;box-shadow:none;border-color:var(--ok);cursor:default}
+.tray-label{text-align:center;color:var(--ink-soft);font-weight:700;font-size:.9rem;margin:16px 0 10px}
+.tray{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.chip-card{border:2px solid var(--line);background:var(--paper);border-radius:14px;padding:10px 14px;font-weight:800;box-shadow:0 4px 0 var(--line);touch-action:none;user-select:none;-webkit-user-select:none;max-width:100%;text-align:left}
+.chip-card.sel{border-color:var(--sun);background:var(--paper-2);transform:translateY(-3px)}
+.chip-card.lifting{opacity:.35}
+.chip-card.wiggle{animation:shake .35s}
+.drag-ghost{position:fixed;z-index:50;pointer-events:none;transform:translate(-50%,-50%) rotate(-3deg);box-shadow:0 12px 24px rgba(0,0,0,.25)}
+
+/* suitcase */
+.wish-in{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.wish-in span{flex:none;width:34px;height:34px;border-radius:50%;background:var(--coral);color:var(--on-accent);display:grid;place-items:center;font-weight:900}
+.story{background:var(--paper-2);border-radius:18px;padding:14px 16px;margin-bottom:18px}
+.story p{margin:4px 0 0;font-weight:700}
+.speaker{font-family:var(--font-display);font-weight:800;color:var(--coral)}
+.case{max-width:520px;margin:0 auto;position:relative;padding-top:26px}
+.case-handle{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:34px;border:8px solid var(--sea-2);border-bottom:0;border-radius:20px 20px 0 0}
+.case-body{background:var(--sea-2);border-radius:26px;padding:20px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;box-shadow:inset 0 -8px 0 rgba(0,0,0,.18)}
+.case.guard .case-body{background:var(--berry)}
+.tag-wish{border:0;background:var(--paper);border-radius:12px;padding:10px 16px;font-weight:900;box-shadow:0 4px 0 rgba(0,0,0,.2);transition:transform .4s, opacity .4s}
+.tag-wish.gone{text-decoration:line-through;opacity:.35;box-shadow:none}
+.tag-wish.fly{transform:translate(120px,-160px) rotate(40deg);opacity:0}
+.tag-wish.chosen{background:var(--sun);color:var(--on-accent);transform:scale(1.15)}
+.dream-card{background:var(--sun);color:var(--on-accent);border-radius:20px;padding:14px 18px;margin-bottom:18px;display:grid}
+.dream-card b{font-family:var(--font-display);font-size:1.3rem}
+.dream-card small{font-weight:800}
+
+/* chat */
+.chat{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.msg{display:flex;align-items:flex-end;gap:8px;max-width:88%}
+.msg.me{align-self:flex-end}
+.ava{flex:none;width:38px;height:38px;border-radius:50%;background:var(--paper-2);display:grid;place-items:center;font-size:1.3rem}
+.bubble{background:var(--info-bg);border-radius:18px 18px 18px 4px;padding:10px 14px;font-weight:700;min-width:0;overflow-wrap:anywhere}
+.msg.me .bubble{background:var(--sun);color:var(--on-accent);border-radius:18px 18px 4px 18px}
+.letter{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--coral);color:var(--on-accent);font-family:var(--font-display);font-size:.8rem;margin-right:4px}
+.composer form{display:flex;gap:10px;flex-wrap:wrap}
+.composer .inp{flex:1 1 220px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{border:2px solid var(--line);background:var(--paper-2);border-radius:999px;padding:8px 14px;font-weight:800}
+.chip[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:var(--on-accent)}
+.own-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.own-row .inp{flex:1 1 240px}
+.lesson-divider{display:flex;align-items:center;gap:12px;color:#fff;font-family:var(--font-display);font-weight:800;font-size:clamp(.85rem,2.6vw,1.05rem);margin:6px 0 32px;text-align:center}
+.lesson-divider::before,.lesson-divider::after{content:"";flex:1;border-top:4px dashed rgba(255,255,255,.55)}
+.lesson-divider .anchor{width:52px;height:52px;flex:none;border-radius:50%;background:var(--sun);display:grid;place-items:center;font-size:1.5rem;box-shadow:var(--lift)}
+.lesson-end{background:var(--sun);color:var(--on-accent);border-radius:18px;padding:14px 18px;font-weight:900;max-width:60ch}
+.coins small{font-weight:800;font-size:.72rem;color:var(--ink-soft)}
+.smart{border-radius:22px;border:3px solid var(--ink);overflow:hidden;margin:8px 0 16px}
+.smart h3{background:var(--ink);color:var(--paper);padding:10px 16px;font-size:1rem}
+.smart-row{display:grid;grid-template-columns:44px 130px 1fr;gap:10px;align-items:center;padding:10px 16px;border-top:2px solid var(--line)}
+.smart-row:first-of-type{border-top:0}
+.smart-row .letter{width:36px;height:36px;font-size:1rem;margin:0}
+.smart-row span{font-weight:800;color:var(--ink-soft);font-size:.9rem}
+.smart-row b{min-width:0;overflow-wrap:anywhere}
+.goal-line{background:var(--paper-2);margin:0;padding:14px 16px;font-weight:700;border-top:2px solid var(--line)}
+
+/* calculator */
+.formula{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;background:var(--ink);color:var(--paper);border-radius:18px;padding:14px;font-weight:900;margin-bottom:18px;text-align:center}
+.formula span{background:rgba(255,255,255,.12);border-radius:10px;padding:4px 10px}
+.problem{border:3px solid var(--line);border-radius:22px;padding:18px}
+.problem h3{font-size:1.15rem;margin-bottom:6px}
+.prob-step{font-weight:800;color:var(--ink-soft);font-size:.85rem}
+.qa{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:center;margin-top:12px;font-weight:800}
+.qa .inp{text-align:center;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.qa .inp.right{border-color:var(--ok);background:var(--ok-bg)}
+.qa .inp.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.planner{display:grid;gap:14px}
+.planner h3{font-size:1.2rem}
+.slider{display:grid;gap:4px;font-weight:800}
+.slider output{font-family:var(--font-display);color:var(--coral)}
+.slider input{width:100%;accent-color:var(--coral)}
+.calc-line{font-size:1.15rem;font-weight:800;text-align:center;background:var(--paper-2);border-radius:16px;padding:12px}
+.calc-line b{color:var(--coral);font-family:var(--font-display)}
+.weeks{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:6px}
+.wk{aspect-ratio:1;max-width:100%;border-radius:10px;background:var(--paper-2);display:grid;place-items:center;font-size:.7rem;font-weight:900;color:var(--ink-soft);border:2px solid var(--line)}
+.wk.on{background:var(--sun);color:var(--on-accent);border-color:var(--sand-2);animation:pop .3s ease both}
+.wk.last.on{background:var(--leaf)}
+
+/* budget */
+.bal{background:var(--ink);color:var(--paper);border-radius:20px;padding:16px 18px;margin-bottom:16px}
+.bal small{font-weight:800;opacity:.8}
+.bal b{display:block;font-family:var(--font-display);font-size:clamp(1.6rem,6vw,2.3rem);font-variant-numeric:tabular-nums}
+.bar{height:14px;border-radius:999px;background:rgba(255,255,255,.15);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--leaf);border-radius:999px;transition:width .6s ease, background .3s}
+.exp-card{border:3px solid var(--line);border-radius:22px;padding:18px;text-align:center}
+.exp-ico{font-size:3rem;line-height:1}
+.exp-card h3{font-size:1.15rem;margin:8px 0 4px}
+.exp-card.event{border-color:var(--coral);animation:shake .4s}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
+.opt{border:3px solid var(--line);background:var(--paper-2);border-radius:16px;padding:14px 10px;font-weight:900;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.ledger{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:6px}
+.ledger li{display:flex;justify-content:space-between;gap:10px;background:var(--paper-2);border-radius:12px;padding:8px 12px;font-weight:700}
+.ledger li b{white-space:nowrap;color:var(--bad);font-variant-numeric:tabular-nums}
+
+/* jars */
+.wallet{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--paper-2);border-radius:18px;padding:12px 16px;margin-bottom:16px;font-weight:800}
+.coin{width:30px;height:30px;border-radius:50%;background:var(--sun);border:3px solid var(--sand-2);display:inline-grid;place-items:center;font-size:.62rem;font-weight:900;color:var(--on-accent)}
+.wallet-coins{display:flex;flex-wrap:wrap;gap:4px}
+.jars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.jar{display:grid;gap:8px;justify-items:center;text-align:center}
+.jar-glass{width:100%;max-width:150px;height:170px;border:4px solid var(--ink-soft);border-top-width:10px;border-radius:14px 14px 30px 30px;position:relative;overflow:hidden;background:var(--paper-2)}
+.jar-fill{position:absolute;left:0;right:0;bottom:0;height:calc(var(--f,0)*100%);transition:height .3s ease}
+.jar-amt{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:1.15rem;color:var(--ink)}
+.jar h3{font-size:.95rem}
+.jar small{font-weight:700;color:var(--ink-soft);line-height:1.25}
+.jar-ctl{display:flex;gap:8px}
+.jar-ctl button{width:44px;height:44px;border-radius:50%;border:0;font-size:1.3rem;font-weight:900;background:var(--paper-2);box-shadow:0 3px 0 var(--line)}
+.wants{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center;font-weight:800}
+.want{border-radius:999px;padding:6px 12px;background:var(--paper-2);border:2px solid var(--line);opacity:.55}
+.want.can{opacity:1;border-color:var(--ok);background:var(--ok-bg)}
+.goal-strip{margin-top:14px;text-align:center;font-weight:800;font-size:1.05rem;background:var(--info-bg);border-radius:16px;padding:12px}
+
+/* flags */
+.flag-card{border:3px solid var(--line);border-radius:24px;padding:22px;text-align:center;max-width:620px;margin:0 auto}
+.flag-card .who{font-size:2.6rem;line-height:1}
+.flag-card p{font-size:1.15rem;font-weight:800;margin:10px 0 0}
+.flag-count{text-align:center;font-weight:800;color:var(--ink-soft);margin-bottom:10px}
+.flag-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:620px;margin:16px auto 0}
+.flag-btn{border:0;border-radius:18px;padding:16px 10px;font-weight:900;font-size:1.05rem;color:#fff;display:grid;gap:4px;justify-items:center;box-shadow:0 5px 0 rgba(0,0,0,.25)}
+.flag-btn span{font-size:1.8rem;line-height:1}
+.flag-btn.green{background:#1c8f4c}
+.flag-btn.red{background:#cf3b31}
+.flag-btn:active{transform:translateY(3px)}
+.flag-btn:disabled{opacity:.45}
+
+/* steps order */
+.order-list{list-style:none;padding:0;margin:0 0 14px;display:grid;gap:8px;counter-reset:s}
+.order-list li{counter-increment:s;display:flex;gap:10px;align-items:center;background:var(--ok-bg);border:2px solid var(--ok);border-radius:14px;padding:10px 14px;font-weight:800;animation:pop .25s}
+.order-list li::before{content:counter(s);flex:none;width:30px;height:30px;border-radius:50%;background:var(--ok);color:var(--paper);display:grid;place-items:center;font-weight:900}
+.pool{display:grid;gap:8px}
+.pool button{text-align:left;border:2px solid var(--line);background:var(--paper-2);border-radius:14px;padding:12px 14px;font-weight:800}
+.pool button.wiggle{animation:shake .35s;border-color:var(--bad)}
+.ad{background:repeating-linear-gradient(45deg,var(--paper-2) 0 14px,var(--paper) 14px 28px);border:3px solid var(--coral);border-radius:20px;padding:18px;text-align:center}
+.ad .burst{display:inline-block;background:var(--coral);color:var(--on-accent);font-weight:900;border-radius:999px;padding:2px 12px;font-size:.8rem;transform:rotate(-3deg)}
+.ad p{font-family:var(--font-display);font-size:1.15rem;margin:10px 0 0}
+
+/* frog */
+.frog-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.frog-list button{text-align:left;border:2px solid var(--line);background:var(--paper-2);border-radius:16px;padding:12px 14px;font-weight:800}
+.frog-stage{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+.frog{font-size:calc(5rem * var(--s,1));line-height:1;transition:font-size .4s ease;width:6rem;text-align:center}
+.checks{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.checks label{display:flex;gap:10px;align-items:center;background:var(--paper-2);border-radius:14px;padding:10px 14px;font-weight:800;cursor:pointer}
+.checks input{width:22px;height:22px;accent-color:var(--leaf)}
+.checks input:checked + span{text-decoration:line-through;color:var(--ink-soft)}
+.timer{margin-top:20px;border-radius:20px;background:var(--bad-bg);padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.timer b{font-family:var(--font-display);font-size:2rem;font-variant-numeric:tabular-nums}
+
+/* finish */
+.finish{text-align:center;display:grid;gap:12px;justify-items:center}
+.finish-badge{width:110px;height:110px;border-radius:50%;background:var(--sun);display:grid;place-items:center;font-size:3.2rem;box-shadow:0 6px 0 var(--sand-2);animation:pop .5s ease}
+.finish h2{font-size:clamp(1.4rem,4vw,2rem)}
+.finish-coins{font-family:var(--font-display);font-size:1.6rem;color:var(--coral);margin:0}
+.lesson-box{background:var(--info-bg);border-radius:18px;padding:14px 18px;text-align:left;max-width:60ch}
+.lesson-box p{margin:4px 0 0;font-weight:700}
+
+/* overlay & pop */
+.overlay{position:fixed;inset:0;background:rgba(6,33,42,.6);display:grid;place-items:center;z-index:40;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.modal{background:var(--paper);border-radius:28px;padding:28px;max-width:440px;width:100%;text-align:center;display:grid;gap:14px;box-shadow:var(--lift)}
+.modal h2{font-size:1.5rem}
+.modal .big{font-size:3.5rem;line-height:1}
+.pop{position:fixed;z-index:60;font-family:var(--font-display);font-weight:800;color:var(--sun);text-shadow:0 2px 0 rgba(0,0,0,.35);pointer-events:none;animation:rise 1s ease forwards}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:70;width:100%;height:100%}
+
+@keyframes pop{0%{transform:scale(.85);opacity:.4}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@keyframes rise{0%{transform:translate(-50%,0);opacity:1}100%{transform:translate(-50%,-60px);opacity:0}}
+
+@media (max-width:640px){
+  body{font-size:16px}
+  .hero{grid-template-columns:1fr}
+  .compass{width:120px}
+  .bins,.jars{grid-template-columns:1fr}
+  .bin{min-height:auto}
+  .jar{grid-template-columns:110px 1fr;justify-items:start;text-align:left;align-items:center}
+  .jar-glass{height:120px;grid-row:1/4}
+  .smart-row{grid-template-columns:40px 1fr}
+  .smart-row b{grid-column:1/3}
+  .qa{grid-template-columns:1fr}
+  .frog-stage{grid-template-columns:1fr;justify-items:center}
+  .brand small{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<div id="app"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- состояние ---------- */
+const KEY = 'kiberfin-island-v1';
+const fresh = () => ({ name: '', st: {}, wishes: [], dream: null, goal: null, sound: true });
+let S = fresh();
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+/* ---------- утилиты ---------- */
+const app = document.getElementById('app');
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const rub = n => Math.round(n).toLocaleString('ru-RU') + ' ₽';
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const plural = (n, f) => { const m10 = n % 10, m100 = n % 100; return f[m10 === 1 && m100 !== 11 ? 0 : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? 1 : 2]; };
+const totalCoins = () => Object.values(S.st).reduce((s, x) => s + (x.coins || 0), 0);
+const lazy = v => /^\s*потому\s+что\s+(хочу|хочется|надо)\s*[.!]*\s*$/i.test(v);
+const timers = new Set();
+const clearTimers = () => { timers.forEach(t => clearInterval(t)); timers.clear(); };
+
+/* ---------- звук ---------- */
+let actx = null;
+function tone(freqs, dur = 0.12, vol = 0.16) {
+  if (!S.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = actx.currentTime;
+    freqs.forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      const t = t0 + i * dur;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + 0.03);
+    });
+  } catch (e) {}
+}
+const sfx = {
+  ok: () => tone([660, 880]),
+  bad: () => tone([260, 196], 0.16, 0.12),
+  coin: () => tone([988, 1319], 0.07, 0.1),
+  win: () => tone([523, 659, 784, 1047], 0.13),
+  tap: () => tone([520], 0.05, 0.06),
+};
+
+/* ---------- конфетти ---------- */
+const cv = document.getElementById('confetti'), cx = cv.getContext('2d');
+let parts = [], raf = 0;
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  cv.width = innerWidth; cv.height = innerHeight;
+  const cs = getComputedStyle(document.documentElement);
+  const colors = ['--sun', '--coral', '--leaf', '--berry', '--sea'].map(v => cs.getPropertyValue(v).trim());
+  for (let i = 0; i < 140; i++) parts.push({
+    x: innerWidth / 2 + (Math.random() - .5) * 240, y: innerHeight * .35,
+    vx: (Math.random() - .5) * 14, vy: -Math.random() * 13 - 4,
+    s: 7 + Math.random() * 7, r: Math.random() * 6, vr: (Math.random() - .5) * .3,
+    c: colors[i % colors.length]
+  });
+  if (!raf) raf = requestAnimationFrame(step);
+}
+function step() {
+  cx.clearRect(0, 0, cv.width, cv.height);
+  parts.forEach(p => {
+    p.vy += .35; p.x += p.vx; p.y += p.vy; p.vx *= .99; p.r += p.vr;
+    cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c; cx.fillRect(-p.s / 2, -p.s / 3, p.s, p.s * .6); cx.restore();
+  });
+  parts = parts.filter(p => p.y < cv.height + 30);
+  if (parts.length) raf = requestAnimationFrame(step); else { raf = 0; cx.clearRect(0, 0, cv.width, cv.height); }
+}
+function popAt(el, text) {
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const p = document.createElement('div');
+  p.className = 'pop'; p.textContent = text;
+  p.style.left = (r.left + r.width / 2) + 'px'; p.style.top = (r.top - 6) + 'px';
+  document.body.append(p); setTimeout(() => p.remove(), 1000);
+}
+
+/* ---------- сортировка: перетаскивание или «нажми карточку → нажми корзину» ---------- */
+function sorter(root, { bins, items, onCorrect, onWrong, onDone }) {
+  root.innerHTML = `
+    <div class="bins">${bins.map(b => `
+      <div class="bin" data-bin="${b.id}" role="button" tabindex="0" aria-label="${esc(b.title)}">
+        <div class="bin-head"><span class="bin-ico">${b.icon}</span>${b.title}</div>
+        <small>${b.hint}</small>
+        <div class="bin-drop"></div>
+      </div>`).join('')}
+    </div>
+    <p class="tray-label">Перетащи карточку в корзину или нажми на карточку, а потом на корзину</p>
+    <div class="tray">${items.map((it, i) => `<button class="chip-card" data-i="${i}">${it.text}</button>`).join('')}</div>`;
+  const tray = $('.tray', root);
+  let sel = null, left = items.length;
+  const tries = items.map(() => 0);
+  const binAt = (x, y) => document.elementFromPoint(x, y)?.closest('[data-bin]');
+  const select = c => { if (sel) sel.classList.remove('sel'); sel = (sel === c) ? null : c; if (sel) { sel.classList.add('sel'); sfx.tap(); } };
+  function drop(c, bin) {
+    const i = +c.dataset.i, it = items[i];
+    $$('.bin', root).forEach(b => b.classList.remove('over'));
+    if (it.accept.includes(bin.dataset.bin)) {
+      c.classList.remove('sel'); sel = null;
+      c.disabled = true; $('.bin-drop', bin).append(c);
+      sfx.ok(); onCorrect(it, tries[i] === 0, bin.dataset.bin);
+      if (--left === 0) setTimeout(onDone, 600);
+    } else {
+      tries[i]++; sfx.bad();
+      bin.classList.remove('shake'); void bin.offsetWidth; bin.classList.add('shake');
+      c.classList.remove('wiggle'); void c.offsetWidth; c.classList.add('wiggle');
+      onWrong(it, bin.dataset.bin);
+    }
+  }
+  tray.addEventListener('pointerdown', e => {
+    const c = e.target.closest('.chip-card');
+    if (!c || c.disabled || e.button > 0) return;
+    e.preventDefault();
+    const sx = e.clientX, sy = e.clientY; let ghost = null, over = null;
+    const move = ev => {
+      if (!ghost && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 8) {
+        ghost = c.cloneNode(true); ghost.classList.add('drag-ghost'); ghost.classList.remove('sel');
+        ghost.style.width = c.getBoundingClientRect().width + 'px';
+        document.body.append(ghost); c.classList.add('lifting');
+      }
+      if (ghost) {
+        ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px';
+        const b = binAt(ev.clientX, ev.clientY);
+        if (b !== over) { over?.classList.remove('over'); over = b; over?.classList.add('over'); }
+      }
+    };
+    const up = ev => {
+      removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
+      if (ghost) {
+        ghost.remove(); c.classList.remove('lifting'); over?.classList.remove('over');
+        const b = ev.type === 'pointerup' ? binAt(ev.clientX, ev.clientY) : null;
+        if (b) drop(c, b);
+      } else select(c);
+    };
+    addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  });
+  tray.addEventListener('keydown', e => { const c = e.target.closest('.chip-card'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); select(c); } });
+  $$('.bin', root).forEach(b => {
+    const go = () => { if (sel) drop(sel, b); };
+    b.addEventListener('click', go);
+    b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
+}
+
+/* =========================================================
+   СТАНЦИИ
+   ========================================================= */
+const STATIONS = [
+
+/* ---------- 1. Желание, мечта или цель ---------- */
+{
+  id: 'kinds', lesson: 2, icon: '🧭', title: 'Желание, мечта или цель?', max: 50,
+  task: 'Разложи фразы по трём корзинам. Подсказка: у цели всегда есть план и срок.',
+  play(api) {
+    const WHY = {
+      w: 'Желание — это то, что хочется прямо сейчас. Оно может измениться в любую минуту.',
+      d: 'Мечта — это желание о будущем. Оно большое, но у него нет плана.',
+      g: 'Цель — это мечта с планом: есть конкретные шаги и срок.'
+    };
+    const items = shuffle([
+      { text: '«Хочу мороженое»', accept: ['w'] },
+      { text: '«Хочу новую игрушку»', accept: ['w'] },
+      { text: '«Хочу чипсы прямо сейчас»', accept: ['w'] },
+      { text: '«Когда вырасту, стану актёром»', accept: ['d'] },
+      { text: '«Однажды я побываю в Японии»', accept: ['d'] },
+      { text: '«Хорошо бы когда-нибудь жить в своём доме у моря»', accept: ['d'] },
+      { text: '«Запишусь в театральную студию и буду выступать на сцене, чтобы стать актёром»', accept: ['g'] },
+      { text: '«Откладываю по 5 000 ₽ в месяц, чтобы через 2 года поехать в Японию»', accept: ['g'] },
+      { text: '«Куплю велосипед за 15 000 ₽ через 6 месяцев. Буду откладывать по 2 500 ₽ в месяц»', accept: ['g'] },
+      { text: '«Было бы здорово когда-нибудь иметь крутой велосипед»', accept: ['d'] },
+    ]);
+    sorter(api.stage, {
+      bins: [
+        { id: 'w', icon: '⚡', title: 'Желание', hint: 'Хочется прямо сейчас' },
+        { id: 'd', icon: '☁️', title: 'Мечта', hint: 'Про будущее, но без плана' },
+        { id: 'g', icon: '🎯', title: 'Цель', hint: 'Мечта + план + срок' },
+      ],
+      items,
+      onCorrect: (it, first, bin) => { if (first) api.coin(5); api.say('Верно! ' + WHY[bin], 'ok'); },
+      onWrong: (it, bin) => api.say('Не совсем. ' + WHY[bin] + ' Подходит ли это к фразе?', 'bad'),
+      onDone: () => api.finish('Главное отличие цели от мечты — план и действия. Чтобы превратить мечту в цель, спроси себя: что именно я хочу? Сколько это стоит? Какие шаги нужны? Почему это важно? Когда я хочу этого достичь?')
+    });
+  }
+},
+
+/* ---------- 2. Волшебный чемоданчик ---------- */
+{
+  id: 'suitcase', lesson: 2, icon: '🧳', title: 'Волшебный чемоданчик', max: 30,
+  task: 'Ты летишь на волшебный остров, где сбываются мечты. Но чемоданчик маленький, и в нём поместится только одна мечта.',
+  play(api) {
+    const ex = ['Велосипед', 'Научиться играть на гитаре', 'Поехать на море', 'Собаку', 'Большой набор LEGO'];
+    const phase1 = () => {
+      api.stage.innerHTML = `
+        <p class="lead">Запиши 5 своих самых важных желаний.</p>
+        ${[0, 1, 2, 3, 4].map(i => `<label class="wish-in"><span>${i + 1}</span><input class="inp" id="wish${i}" maxlength="50" placeholder="${ex[i]}" value="${esc(S.wishes[i] || '')}"></label>`).join('')}
+        <div class="row" style="margin-top:14px"><button class="btn ghost" id="fillEx">Взять примеры</button><button class="btn primary" id="pack">Собрать чемодан 🧳</button></div>`;
+      $('#fillEx').onclick = () => ex.forEach((x, i) => { const el = $('#wish' + i); if (!el.value.trim()) el.value = x; });
+      $('#pack').onclick = () => {
+        const w = [0, 1, 2, 3, 4].map(i => $('#wish' + i).value.trim());
+        if (w.some(x => !x)) { sfx.bad(); api.say('Заполни все 5 строчек. Если не придумывается, нажми «Взять примеры».', 'bad'); return; }
+        S.wishes = w; save(); api.clear(); api.coin(10); phase2(w);
+      };
+    };
+    const TEXT = [
+      { who: '🧭 Рассказчик', t: 'Вы летите на волшебный остров. Но по дороге одно желание потерялось! Нажми на желание, которое <b>оставишь</b>. Выбери самое неважное.' },
+      { who: '🌬️ Ветер', t: 'Ветер усиливается, и чемодан становится ещё меньше! Оставь ещё одно желание.' },
+      { who: '💂 Охранник острова', t: 'Стой! Пронести можно <b>только одну мечту</b>. Нажми на самое главное желание.' },
+    ];
+    const phase2 = w => {
+      let stepN = 0; const gone = new Set();
+      const draw = () => {
+        api.stage.innerHTML = `
+          <div class="story"><div class="speaker">${TEXT[stepN].who}</div><p>${TEXT[stepN].t}</p></div>
+          <div class="case ${stepN === 2 ? 'guard' : ''}"><div class="case-handle"></div>
+            <div class="case-body">${w.map((x, i) => `<button class="tag-wish ${gone.has(i) ? 'gone' : ''}" data-i="${i}" ${gone.has(i) ? 'disabled' : ''}>${esc(x)}</button>`).join('')}</div>
+          </div>`;
+        $$('.tag-wish:not(.gone)', api.stage).forEach(b => b.onclick = () => {
+          const i = +b.dataset.i;
+          $$('.tag-wish', api.stage).forEach(x => x.disabled = true);
+          if (stepN < 2) { b.classList.add('fly'); sfx.tap(); setTimeout(() => { gone.add(i); stepN++; draw(); }, 480); }
+          else { b.classList.add('chosen'); sfx.win(); setTimeout(() => phase3(w[i]), 800); }
+        });
+      };
+      draw();
+    };
+    const phase3 = dream => {
+      api.coin(10);
+      api.stage.innerHTML = `
+        <div class="dream-card"><small>Твоя главная мечта</small><b>${esc(dream)}</b></div>
+        <label class="field"><span>1. Почему именно это желание самое важное для тебя?</span>
+          <textarea id="why1" rows="2" maxlength="300" placeholder="Например: велосипед поможет мне больше гулять с друзьями и заниматься спортом"></textarea></label>
+        <label class="field"><span>2. Как оно изменит твою жизнь, если сбудется?</span>
+          <textarea id="why2" rows="2" maxlength="300" placeholder="Например: я стану активнее и смогу ездить в парк на велосипеде"></textarea></label>
+        <p class="hint">Потом расскажи о своём выборе соседу по парте. Пусть он задаст тебе хотя бы один вопрос.</p>
+        <button class="btn primary" id="done">Готово</button>`;
+      $('#done').onclick = () => {
+        const a = $('#why1').value.trim(), b = $('#why2').value.trim();
+        if (a.length < 12 || b.length < 12 || lazy(a) || lazy(b)) { sfx.bad(); api.say('Расскажи подробнее! Ответ «потому что хочу» не подходит. Объясни, что изменится.', 'bad'); return; }
+        S.dream = { text: dream, why: a, change: b }; save();
+        api.coin(10);
+        api.finish('Когда ты объясняешь, почему мечта важна, она становится реальнее. Отнеси её на следующую станцию, в «Агентство исполнения желаний». Там мечта превратится в цель.');
+      };
+    };
+    phase1();
+  }
+},
+
+/* ---------- 3. Агентство исполнения желаний ---------- */
+{
+  id: 'agency', lesson: 2, icon: '🕵️', title: 'Агентство исполнения желаний', max: 30,
+  task: 'Агент мечты Финик задаст тебе 5 вопросов. Отвечай подробно, и мечта станет SMART-целью.',
+  play(api) {
+    const dream = S.dream?.text;
+    const g = {};
+    const Q = [
+      { key: 'what', letter: 'S', name: 'Конкретная', type: 'text',
+        q: (dream ? `Здравствуй! Я агент мечты Финик. Вижу, у тебя есть мечта «<b>${esc(dream)}</b>». ` : 'Здравствуй! Я агент мечты Финик. ') + 'Что именно ты хочешь? Какой марки, цвета, размера?',
+        ph: 'Например: синий горный велосипед Stark, 26 дюймов',
+        check: v => v.trim().length >= 10 || 'Слишком коротко! Какой именно? Добавь марку, цвет или размер.' },
+      { key: 'cost', letter: 'M', name: 'Измеримая', type: 'number',
+        q: 'Отлично! Сколько это стоит? Напиши цену в рублях. Если не знаешь, спроси у взрослых или посмотри в магазине.',
+        ph: 'Например: 15000',
+        check: v => (v >= 50 && v <= 5000000) || 'Напиши цену цифрами, например 15000.' },
+      { key: 'how', letter: 'A', name: 'Достижимая', type: 'chips',
+        q: 'Как ты будешь на это копить? Выбери все источники денег.',
+        options: ['Карманные деньги', 'Помощь по дому', 'Подарки на праздники', 'Продам ненужные вещи', 'Сдача после покупок'],
+        check: v => v.length > 0 || 'Выбери хотя бы один способ. Без денег цель не сбудется!' },
+      { key: 'why', letter: 'R', name: 'Актуальная', type: 'text',
+        q: 'Почему эта цель важна именно для тебя?',
+        ph: dream && S.dream.why ? S.dream.why : 'Например: смогу кататься с друзьями в парке',
+        check: v => (v.trim().length >= 10 && !lazy(v)) || 'Расскажи подробнее! Что изменится, когда цель сбудется?' },
+      { key: 'months', letter: 'T', name: 'Срок', type: 'number',
+        q: 'И последний вопрос: за сколько месяцев ты хочешь накопить?',
+        ph: 'Например: 6',
+        check: v => (Number.isInteger(v) && v >= 1 && v <= 36) || 'Напиши целое число месяцев от 1 до 36.' },
+    ];
+    api.stage.innerHTML = `<div class="chat" id="chat"></div><div class="composer" id="comp"></div>`;
+    const chat = $('#chat', api.stage), comp = $('#comp', api.stage);
+    const bot = html => { chat.insertAdjacentHTML('beforeend', `<div class="msg bot"><span class="ava">🤖</span><div class="bubble">${html}</div></div>`); chat.lastElementChild.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
+    const me = t => chat.insertAdjacentHTML('beforeend', `<div class="msg me"><div class="bubble">${esc(t)}</div><span class="ava">🧒</span></div>`);
+    let k = 0;
+    const answer = (q, v, shown) => {
+      const res = q.check(v);
+      if (res !== true) { sfx.bad(); bot(res); return; }
+      me(shown); g[q.key] = v; api.coin(6); comp.innerHTML = '';
+      k++;
+      setTimeout(k < Q.length ? ask : result, 500);
+    };
+    const ask = () => {
+      const q = Q[k];
+      bot(`<span class="letter">${q.letter}</span>${q.q}`);
+      if (q.type === 'chips') {
+        comp.innerHTML = `<div class="chips">${q.options.map(o => `<button type="button" class="chip" aria-pressed="false">${o}</button>`).join('')}</div>
+          <form class="own-row" id="ownF"><input class="inp" id="ownV" maxlength="40" placeholder="Свой вариант, например: продам свои рисунки" autocomplete="off"><button class="btn">Добавить</button></form>
+          <button class="btn primary" id="send">Ответить</button>`;
+        const chipsBox = $('.chips', comp);
+        chipsBox.onclick = e => { const c = e.target.closest('.chip'); if (!c) return; c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); sfx.tap(); };
+        const addOwn = () => {
+          const inp = $('#ownV', comp), t = inp.value.trim();
+          if (!t) return;
+          const same = $$('.chip', comp).find(c => c.textContent.toLowerCase() === t.toLowerCase());
+          if (same) same.setAttribute('aria-pressed', 'true');
+          else { const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.setAttribute('aria-pressed', 'true'); c.textContent = t; chipsBox.append(c); }
+          inp.value = ''; sfx.tap();
+        };
+        $('#ownF', comp).onsubmit = e => { e.preventDefault(); addOwn(); };
+        $('#send', comp).onclick = () => { addOwn(); const v = $$('.chip[aria-pressed="true"]', comp).map(c => c.textContent); answer(q, v, v.join(', ')); };
+      } else {
+        comp.innerHTML = `<form id="f"><input class="inp" id="ans" ${q.type === 'number' ? 'type="number" inputmode="numeric" min="0"' : 'type="text" maxlength="120"'} placeholder="${esc(q.ph)}" autocomplete="off"><button class="btn primary">Ответить</button></form>`;
+        const inp = $('#ans', comp); inp.focus({ preventScroll: true });
+        $('#f', comp).onsubmit = e => { e.preventDefault(); const raw = inp.value.trim(); const v = q.type === 'number' ? Number(raw) : raw; answer(q, v, q.type === 'number' && q.key === 'cost' ? rub(v) : q.key === 'months' ? `${v} ${plural(v, ['месяц', 'месяца', 'месяцев'])}` : raw); };
+      }
+    };
+    const result = () => {
+      const weeks = g.months * 4, per = Math.ceil(g.cost / weeks);
+      S.goal = { what: g.what, cost: g.cost, months: g.months, how: g.how, why: g.why }; save();
+      bot('Ура! Теперь у тебя не просто мечта, а <b>настоящая цель</b>. Вот твоя SMART-карточка:');
+      chat.insertAdjacentHTML('beforeend', `
+        <div class="smart">
+          <h3>Моя SMART-цель</h3>
+          ${Q.map(q => `<div class="smart-row"><span class="letter">${q.letter}</span><span>${q.name}</span><b>${esc(q.key === 'cost' ? rub(g.cost) : q.key === 'how' ? g.how.join(', ') : q.key === 'months' ? `${g.months} ${plural(g.months, ['месяц', 'месяца', 'месяцев'])} (${weeks} ${plural(weeks, ['неделя', 'недели', 'недель'])})` : g[q.key])}</b></div>`).join('')}
+          <p class="goal-line">Я накоплю на «${esc(g.what)}» ${rub(g.cost)} за ${g.months} ${plural(g.months, ['месяц', 'месяца', 'месяцев'])}. Для этого буду откладывать <b>${rub(per)} в неделю</b>.</p>
+        </div>`);
+      if (per > 1500) bot(`Ого, ${rub(per)} в неделю — это много. Подумай: можно увеличить срок или найти ещё способ заработать.`);
+      comp.innerHTML = `<button class="btn primary" id="ok">Забрать карточку</button>`;
+      $('#ok', comp).onclick = () => api.finish('Хорошая цель отвечает на 5 вопросов: что именно (конкретная), сколько стоит (измеримая), как накоплю (достижимая), почему важно (актуальная) и когда (срок).');
+    };
+    ask();
+  }
+},
+
+/* ---------- 4. Калькулятор копилки ---------- */
+{
+  id: 'calc', lesson: 2, icon: '🐷', title: 'Калькулятор копилки', max: 40,
+  task: 'Посчитай, сколько нужно откладывать каждую неделю, чтобы цель сбылась вовремя.',
+  play(api) {
+    const P = [
+      { item: '🧩 конструктор', cost: 9000, months: 5 },
+      { item: '🚲 велосипед', cost: 15000, months: 6 },
+      { item: '🛴 самокат', cost: 12000, months: 10 },
+      { item: '📱 телефон', cost: 19200, months: 12 },
+    ];
+    const formula = `<div class="formula"><span>Сумма цели</span>÷<span>Количество недель</span>=<span>Сколько откладывать в неделю</span></div>`;
+    let n = 0;
+    const show = () => {
+      const p = P[n], weeks = p.months * 4, per = p.cost / weeks;
+      let firstTry = true;
+      api.stage.innerHTML = `${formula}
+        <div class="problem">
+          <p class="prob-step">Задача ${n + 1} из ${P.length}</p>
+          <h3>Ты хочешь купить ${p.item} за ${rub(p.cost)}. Копить будешь ${p.months} ${plural(p.months, ['месяц', 'месяца', 'месяцев'])}.</h3>
+          <form id="pf">
+            <label class="qa">Сколько это недель?<input class="inp" id="qW" type="number" inputmode="numeric" autocomplete="off"></label>
+            <label class="qa">Сколько откладывать в неделю, ₽?<input class="inp" id="qP" type="number" inputmode="numeric" autocomplete="off"></label>
+            <div class="row" style="margin-top:14px"><button class="btn primary" id="chk">Проверить</button></div>
+          </form>
+        </div>`;
+      $('#qW').focus({ preventScroll: true });
+      $('#pf').onsubmit = e => {
+        e.preventDefault();
+        if ($('#next')) return;
+        const w = Number($('#qW').value), v = Number($('#qP').value);
+        const okW = w === weeks, okP = Math.abs(v - per) < 1;
+        $('#qW').className = 'inp ' + (okW ? 'right' : 'wrong');
+        $('#qP').className = 'inp ' + (okP ? 'right' : 'wrong');
+        if (!okW) { firstTry = false; sfx.bad(); api.say(`Подсказка: в одном месяце 4 недели. Сколько будет ${p.months} × 4?`, 'bad'); return; }
+        if (!okP) { firstTry = false; sfx.bad(); api.say(`Недели посчитаны верно! Теперь раздели ${p.cost.toLocaleString('ru-RU')} на ${weeks}.`, 'bad'); return; }
+        sfx.ok(); if (firstTry) api.coin(10);
+        api.say(`Верно! ${p.cost.toLocaleString('ru-RU')} ÷ ${weeks} = ${rub(per)} в неделю.`, 'ok');
+        $('#chk').outerHTML = `<button type="button" class="btn coral" id="next">${n + 1 < P.length ? 'Следующая задача →' : 'Посчитать свою цель →'}</button>`;
+        $('#next').onclick = () => { api.clear(); n++; n < P.length ? show() : planner(); };
+        $('#next').focus();
+      };
+    };
+    const planner = () => {
+      const gl = S.goal;
+      const maxCost = Math.max(60000, Math.ceil((gl?.cost || 0) / 500) * 500);
+      const cost0 = gl ? Math.min(gl.cost, maxCost) : 15000;
+      const months0 = gl ? Math.min(gl.months, 24) : 6;
+      api.stage.innerHTML = `${formula}
+        <div class="planner">
+          <h3>А теперь твоя цель${gl ? ': «' + esc(gl.what) + '»' : ''}</h3>
+          ${gl ? '' : '<p class="hint">Цель можно придумать на станции «Агентство исполнения желаний». Пока поиграй с ползунками.</p>'}
+          <label class="slider">Стоимость цели: <output id="oC"></output><input type="range" id="pC" min="500" max="${maxCost}" step="500" value="${cost0}"></label>
+          <label class="slider">Срок накопления: <output id="oM"></output><input type="range" id="pM" min="1" max="24" step="1" value="${months0}"></label>
+          <div class="calc-line" id="line"></div>
+          <div class="weeks" id="wks" aria-label="Недели накопления"></div>
+          <div class="row"><button class="btn primary" id="fin">Готово</button></div>
+        </div>`;
+      const upd = () => {
+        const c = +$('#pC').value, m = +$('#pM').value, w = m * 4, per = Math.ceil(c / w);
+        $('#oC').textContent = rub(c);
+        $('#oM').textContent = `${m} ${plural(m, ['месяц', 'месяца', 'месяцев'])} = ${w} ${plural(w, ['неделя', 'недели', 'недель'])}`;
+        $('#line').innerHTML = `${c.toLocaleString('ru-RU')} ÷ ${w} = <b>${rub(per)} в неделю</b>`;
+        $('#wks').innerHTML = Array.from({ length: w }, (_, i) => `<div class="wk on ${i === w - 1 ? 'last' : ''}" style="animation-delay:${i * 18}ms" title="Неделя ${i + 1}: накоплено ${rub(Math.min(c, per * (i + 1)))}">${i === w - 1 ? '🎉' : i + 1}</div>`).join('');
+      };
+      $('#pC').oninput = upd; $('#pM').oninput = upd; upd();
+      $('#fin').onclick = () => api.finish('Сумма цели ÷ количество недель = сколько откладывать в неделю. В одном месяце примерно 4 недели. Чем больше срок, тем меньше нужно откладывать каждую неделю.');
+    };
+    show();
+  }
+},
+
+/* ---------- 5. Куда делись деньги? ---------- */
+{
+  id: 'budget', lesson: 3, icon: '🏠', title: 'Куда делись деньги?', max: 50,
+  task: 'У семьи зарплата 100 000 ₽ в месяц. Кажется, это много! Угадай, сколько стоит каждая трата, и узнай, сколько останется.',
+  play(api) {
+    const E = [
+      { ico: '🏠', t: 'Семья платит за аренду квартиры', o: [5000, 30000, 150000], r: 30000, n: 'Снять квартиру стоит от 30 000 ₽ в месяц.' },
+      { ico: '🛒', t: 'Семья покупает еду на месяц', o: [3000, 25000, 90000], r: 25000, n: 'Еда для семьи на месяц стоит около 25 000 ₽.' },
+      { ico: '🚌', t: 'Семья платит за транспорт: бензин и проезд', o: [500, 7000, 40000], r: 7000, n: 'Бензин и проезд стоят около 7 000 ₽ в месяц.' },
+      { ico: '🎒', t: 'Ребёнка записали на секцию и купили школьные принадлежности', o: [1000, 6000, 35000], r: 6000, n: 'Секция и канцелярия стоят около 6 000 ₽.' },
+      { ico: '💡', t: 'Семья платит за интернет, электричество и воду', o: [300, 8000, 30000], r: 8000, n: 'Интернет, свет и вода стоят около 8 000 ₽.' },
+      { ico: '🔧', t: 'Ой-ой! Машина сломалась. Нужна починка!', o: [1000, 12000, 70000], r: 12000, n: 'Починка машины обошлась в 12 000 ₽. Такие траты случаются неожиданно.', ev: true },
+      { ico: '🏖️', t: 'Семья решила отложить деньги на отпуск', o: [500, 8000, 50000], r: 8000, n: 'На отпуск отложили 8 000 ₽.' },
+    ];
+    const START = 100000;
+    let bal = START, i = 0; const spent = [];
+    const shell = () => {
+      api.stage.innerHTML = `
+        <div class="bal"><small>Бюджет семьи на месяц</small><b id="bal">${rub(bal)}</b><div class="bar"><i id="bar" style="width:${bal / START * 100}%"></i></div></div>
+        <div id="card"></div>
+        <ul class="ledger" id="led"></ul>`;
+    };
+    const setBal = v => {
+      const from = bal; bal = v;
+      const t0 = performance.now();
+      const anim = t => { const k = Math.min(1, (t - t0) / 600); $('#bal').textContent = rub(from + (v - from) * k); if (k < 1) requestAnimationFrame(anim); };
+      requestAnimationFrame(anim);
+      const pct = v / START * 100; const bar = $('#bar');
+      bar.style.width = pct + '%'; bar.style.background = pct < 15 ? 'var(--bad)' : pct < 40 ? 'var(--sun)' : 'var(--leaf)';
+    };
+    const card = () => {
+      const e = E[i];
+      $('#card').innerHTML = `
+        <div class="exp-card ${e.ev ? 'event' : ''}">
+          <div class="exp-ico">${e.ico}</div>
+          <p class="prob-step">Трата ${i + 1} из ${E.length}</p>
+          <h3>${e.t}</h3>
+          <p class="muted" style="margin:0;font-weight:700">Как думаешь, сколько это стоит?</p>
+          <div class="opts">${shuffle(e.o).map(v => `<button class="opt" data-v="${v}">${rub(v)}</button>`).join('')}</div>
+        </div>`;
+      if (e.ev) sfx.bad();
+      $$('.opt', api.stage).forEach(b => b.onclick = () => {
+        const v = +b.dataset.v;
+        $$('.opt', api.stage).forEach(x => { x.disabled = true; if (+x.dataset.v === e.r) x.classList.add('right'); });
+        if (v === e.r) { sfx.ok(); api.coin(5); api.say('Верно! ' + e.n, 'ok'); }
+        else { b.classList.add('wrong'); sfx.bad(); api.say((v < e.r ? 'Это слишком мало. ' : 'Это слишком много. ') + e.n, 'bad'); }
+        setBal(bal - e.r);
+        spent.push(e);
+        $('#led').insertAdjacentHTML('afterbegin', `<li><span>${e.ico} ${e.t.replace(/^Ой-ой! /, '')}</span><b>−${rub(e.r)}</b></li>`);
+        $('.exp-card', api.stage).insertAdjacentHTML('beforeend', `<div class="row" style="justify-content:center;margin-top:14px"><button class="btn coral" id="nx">${i + 1 < E.length ? 'Следующая трата →' : 'Что осталось? →'}</button></div>`);
+        $('#nx').onclick = () => { api.clear(); i++; i < E.length ? card() : wants(); };
+      });
+    };
+    const wants = () => {
+      const W = [
+        { ico: '🎮', t: 'Новая приставка', c: 45000 },
+        { ico: '📱', t: 'Новый телефон', c: 25000 },
+        { ico: '🚗', t: 'Поездка в аквапарк в другой город', c: 20000 },
+        { ico: '🍿', t: 'Кино всей семьёй', c: 2000 },
+      ];
+      $('#card').innerHTML = `
+        <div class="exp-card">
+          <div class="exp-ico">🤔</div>
+          <h3>После всех обязательных трат осталось ${rub(bal)}</h3>
+          <p class="muted" style="margin:0;font-weight:700">Какое желание семья может себе позволить?</p>
+          <div class="opts">${shuffle(W).map(w => `<button class="opt" data-c="${w.c}">${w.ico} ${w.t}<br><small>${rub(w.c)}</small></button>`).join('')}</div>
+        </div>`;
+      let first = true;
+      $$('.opt', api.stage).forEach(b => b.onclick = () => {
+        const c = +b.dataset.c;
+        if (c <= bal) {
+          sfx.ok(); b.classList.add('right'); $$('.opt', api.stage).forEach(x => x.disabled = true);
+          if (first) api.coin(15);
+          api.say(`Да! Кино стоит ${rub(c)}, и после него останется ${rub(bal - c)}.`, 'ok');
+          $('.exp-card', api.stage).insertAdjacentHTML('beforeend', `<div class="row" style="justify-content:center;margin-top:14px"><button class="btn coral" id="nx">Завершить</button></div>`);
+          $('#nx').onclick = () => api.finish('Вот почему родители не могут купить сразу всё, что хочется. Деньги — это ресурс, которым нужно правильно управлять. Даже если зарплата кажется большой, после обязательных трат остаётся совсем немного.');
+        } else {
+          first = false; sfx.bad(); b.classList.add('wrong'); b.disabled = true;
+          api.say(`Не хватит! Это стоит ${rub(c)}, а осталось только ${rub(bal)}. Если купить это, семье нечем будет платить за квартиру или еду.`, 'bad');
+        }
+      });
+    };
+    shell(); card();
+  }
+},
+
+/* ---------- 6. Три баночки ---------- */
+{
+  id: 'jars', lesson: 3, icon: '🫙', title: 'Распредели карманные деньги', max: 30,
+  task: 'Родители дают тебе 500 ₽ в неделю. Разложи монетки по 50 ₽ в три баночки. На обеды и проезд нужно минимум 250 ₽.',
+  play(api) {
+    const TOTAL = 500, C = 50;
+    const a = { need: 0, want: 0, save: 0 };
+    const J = [
+      { k: 'need', ico: '🍎', t: 'Обязательные', s: 'Обеды в школе, проезд, канцелярия', col: 'var(--sea)' },
+      { k: 'want', ico: '🎈', t: 'Желания', s: 'Кино, сладости, игрушки', col: 'var(--coral)' },
+      { k: 'save', ico: '🐷', t: 'Накопления', s: 'Большая цель', col: 'var(--leaf)' },
+    ];
+    const WANTS = [{ t: '🍫 Шоколадка', c: 100 }, { t: '🎬 Кино с друзьями', c: 250 }, { t: '🧸 Игрушка', c: 500 }];
+    const goal = S.goal && S.goal.cost <= 100000 ? { t: S.goal.what, c: S.goal.cost } : { t: 'велосипед', c: 15000 };
+    let first = true;
+    api.stage.innerHTML = `
+      <div class="wallet"><span>Кошелёк: <b id="left"></b></span><div class="wallet-coins" id="wc"></div></div>
+      <div class="jars">${J.map(j => `
+        <div class="jar">
+          <div class="jar-glass"><div class="jar-fill" id="f-${j.k}" style="background:${j.col}"></div><div class="jar-amt" id="a-${j.k}">0 ₽</div></div>
+          <h3>${j.ico} ${j.t}</h3><small>${j.s}</small>
+          <div class="jar-ctl"><button data-k="${j.k}" data-d="-1" aria-label="Убрать монету из баночки «${j.t}»">−</button><button data-k="${j.k}" data-d="1" aria-label="Положить монету в баночку «${j.t}»">+</button></div>
+        </div>`).join('')}
+      </div>
+      <div class="wants">На желания хватит: ${WANTS.map((w, i) => `<span class="want" id="w${i}">${w.t} · ${w.c} ₽</span>`).join('')}</div>
+      <div class="goal-strip" id="gs"></div>
+      <div class="row" style="justify-content:center;margin-top:16px"><button class="btn primary" id="chk">Проверить</button></div>`;
+    const upd = () => {
+      const used = a.need + a.want + a.save, left = TOTAL - used;
+      $('#left').textContent = rub(left);
+      $('#wc').innerHTML = Array.from({ length: left / C }, () => '<span class="coin">50</span>').join('');
+      J.forEach(j => { $('#f-' + j.k).style.setProperty('--f', a[j.k] / TOTAL); $('#a-' + j.k).textContent = rub(a[j.k]); });
+      WANTS.forEach((w, i) => $('#w' + i).classList.toggle('can', a.want >= w.c));
+      const wk = a.save ? Math.ceil(goal.c / a.save) : 0;
+      $('#gs').innerHTML = a.save
+        ? `Цель «${esc(goal.t)}» за ${rub(goal.c)} ты накопишь за <b>${wk} ${plural(wk, ['неделю', 'недели', 'недель'])}</b>`
+        : `Без накоплений цель «${esc(goal.t)}» не сбудется 😢`;
+    };
+    $$('.jar-ctl button', api.stage).forEach(b => b.onclick = () => {
+      const k = b.dataset.k, d = +b.dataset.d;
+      const used = a.need + a.want + a.save;
+      if (d > 0 && used >= TOTAL) { sfx.bad(); api.say('Монетки закончились! Убери монету из другой баночки.', 'info'); return; }
+      if (d < 0 && a[k] === 0) return;
+      a[k] += d * C; sfx.tap(); upd();
+    });
+    $('#chk').onclick = () => {
+      const used = a.need + a.want + a.save;
+      let err = '';
+      if (used < TOTAL) err = 'В кошельке ещё остались монетки. Разложи все!';
+      else if (a.need < 250) err = 'Не хватит на обеды и проезд! Обязательные траты нужны каждую неделю, минимум 250 ₽.';
+      else if (a.save === 0) err = 'Если ничего не откладывать, мечта не сбудется. Положи хоть немного в накопления.';
+      if (err) { first = false; sfx.bad(); api.say(err, 'bad'); return; }
+      sfx.ok();
+      if (first) api.coin(20);
+      const golden = a.need === 250 && a.want === 150 && a.save === 100;
+      if (golden) api.coin(10);
+      $('#chk').disabled = true;
+      api.say(golden ? 'Супер! Это правило 50/30/20: половина на обязательное, 30% на желания, 20% в копилку.' : 'Отлично, деньги распределены! Попробуй ещё раз и найди правило 50/30/20, за него есть бонус.', 'ok');
+      setTimeout(() => api.finish('Карманные деньги удобно делить на три части: обязательные расходы (около 50%), желания (около 30%) и накопления (около 20%). Если тратить всё на желания, на большую цель ничего не останется.'), 1600);
+    };
+    upd();
+  }
+},
+
+/* ---------- 7. Покупка или импульс? ---------- */
+{
+  id: 'flags', lesson: 3, icon: '🚩', title: 'Покупка или импульс?', max: 45,
+  task: 'Прочитай историю и реши: покупка была запланированной (зелёный флаг) или импульсивной (красный флаг)?',
+  play(api) {
+    const C = shuffle([
+      { w: '👧', t: 'Маша пошла в магазин за хлебом, но на кассе увидела жвачку и купила её.', imp: true, e: 'Жвачку Маша не планировала. Лучше брать только то, за чем идёшь в магазин.' },
+      { w: '👦', t: 'Петя копил на велосипед, но увидел в витрине игрушку и потратил на неё часть денег.', imp: true, e: 'Игрушка отодвинула его цель. Можно было сфотографировать игрушку и подумать дома.' },
+      { w: '🧒', t: 'Саша купил кроссовки, потому что их носят все в классе.', imp: true, e: 'Покупка «как у всех» — это импульс. Сначала спроси себя: мне правда это нужно?' },
+      { w: '👩', t: 'Лена заранее составила список покупок и купила только то, что было в нём.', imp: false, e: 'Список покупок помогает не тратить лишнего.' },
+      { w: '👦', t: 'Дима два месяца копил на книгу про космос и купил её, когда накопил.', imp: false, e: 'Это была цель с планом. Так и надо!' },
+      { w: '👧', t: 'Аня увидела рекламу «Только сегодня скидка!» и сразу купила игру.', imp: true, e: 'Реклама торопит специально. Если вещь важна, она будет нужна и через две недели.' },
+      { w: '🧒', t: 'У Вани порвался рюкзак. Он сравнил цены в трёх магазинах и купил новый.', imp: false, e: 'Ваня подумал и сравнил цены. Это осознанная покупка.' },
+      { w: '👦', t: 'Друг Коли купил слайм, и Коле тоже сразу захотелось. Он купил такой же.', imp: true, e: 'Захотелось в моменте — это импульс. Желание часто проходит через день.' },
+      { w: '👧', t: 'Перед походом в магазин Оля посчитала свои деньги и купила маме подарок, как и планировала.', imp: false, e: 'Оля заранее всё продумала. Зелёный флаг!' },
+    ]);
+    let i = 0;
+    const show = () => {
+      const c = C[i];
+      api.stage.innerHTML = `
+        <p class="flag-count">История ${i + 1} из ${C.length}</p>
+        <div class="flag-card"><div class="who">${c.w}</div><p>${c.t}</p></div>
+        <div class="flag-btns">
+          <button class="flag-btn green" data-imp="0"><span>🏳️</span>Запланированная</button>
+          <button class="flag-btn red" data-imp="1"><span>🚩</span>Импульсивная</button>
+        </div>`;
+      $$('.flag-btn', api.stage).forEach(b => b.onclick = () => {
+        $$('.flag-btn', api.stage).forEach(x => x.disabled = true);
+        const ok = (b.dataset.imp === '1') === c.imp;
+        if (ok) { sfx.ok(); api.coin(5); } else sfx.bad();
+        api.say(`${ok ? 'Верно!' : 'Не совсем.'} Это <b>${c.imp ? 'импульсивная' : 'запланированная'}</b> покупка. ${c.e}`, ok ? 'ok' : 'bad');
+        $('.flag-btns', api.stage).insertAdjacentHTML('afterend', `<div class="row" style="justify-content:center;margin-top:16px"><button class="btn coral" id="nx">${i + 1 < C.length ? 'Следующая история →' : 'Завершить'}</button></div>`);
+        $('#nx').onclick = () => { api.clear(); i++; i < C.length ? show() : api.finish('Импульсивная покупка — это покупка, которую не планировали заранее, а захотели прямо в моменте. Запланированные покупки помогают экономить на мечту, а импульсивные разрушают твои цели.'); };
+      });
+    };
+    show();
+  }
+},
+
+/* ---------- 8. Секретный алгоритм ---------- */
+{
+  id: 'stop', lesson: 3, icon: '🛑', title: 'Секретный алгоритм против рекламы', max: 40,
+  task: 'В магазине продаётся классная колонка, но денег на неё нет. Собери алгоритм «Остановись — Подумай — Действуй» в правильном порядке.',
+  play(api) {
+    const STEPS = [
+      '🛑 Стоп! Не бери сразу',
+      '📷 Сфотографируй вещь и подумай дома',
+      '📜 Запиши её в «Список целей»',
+      '💰 Посмотри, есть ли у тебя деньги',
+      '🎯 Если через 2 недели всё ещё хочешь — покупай!',
+    ];
+    let next = 0, mistakes = 0;
+    api.stage.innerHTML = `<p class="lead">Нажимай на шаги по порядку: какой первый, какой второй…</p><ol class="order-list" id="ol"></ol><div class="pool" id="pool">${shuffle(STEPS.map((s, i) => ({ s, i }))).map(o => `<button data-i="${o.i}">${o.s}</button>`).join('')}</div>`;
+    $$('#pool button', api.stage).forEach(b => b.onclick = () => {
+      if (+b.dataset.i === next) {
+        sfx.ok(); if (!mistakes) api.coin(4); mistakes = 0;
+        $('#ol').insertAdjacentHTML('beforeend', `<li>${b.textContent}</li>`); b.remove(); next++;
+        api.clear();
+        if (next === STEPS.length) setTimeout(ads, 700);
+      } else {
+        mistakes++; sfx.bad(); b.classList.remove('wiggle'); void b.offsetWidth; b.classList.add('wiggle');
+        api.say(next === 0 ? 'Самое первое — остановиться и не хватать вещь сразу.' : 'Это не следующий шаг. Подумай, что нужно сделать сначала.', 'bad');
+      }
+    });
+    const ADS = shuffle([
+      { t: 'Только сегодня! Осталось 3 штуки — успей купить!', a: 'fear' },
+      { t: 'Все крутые ребята в классе уже играют в эту игру!', a: 'pop' },
+      { t: 'С этой газировкой каждый день — праздник!', a: 'fun' },
+      { t: 'Эти кроссовки носят чемпионы. Надень — и станешь звездой!', a: 'status' },
+    ]);
+    const TRICK = { fear: '⏰ Страх не успеть', pop: '👥 Все так делают', fun: '🎉 Веселье и эмоции', status: '⭐ Станешь круче' };
+    const ads = () => {
+      api.clear();
+      let k = 0;
+      const show = () => {
+        const ad = ADS[k]; let first = true;
+        api.stage.innerHTML = `
+          <p class="lead">Реклама специально сделана так, чтобы тебе захотелось купить. Разгадай, какой трюк использует реклама. (${k + 1} из ${ADS.length})</p>
+          <div class="ad"><span class="burst">РЕКЛАМА</span><p>«${ad.t}»</p></div>
+          <div class="opts">${Object.entries(TRICK).map(([key, v]) => `<button class="opt" data-a="${key}">${v}</button>`).join('')}</div>`;
+        $$('.opt', api.stage).forEach(b => b.onclick = () => {
+          if (b.dataset.a === ad.a) {
+            sfx.ok(); if (first) api.coin(5); b.classList.add('right');
+            $$('.opt', api.stage).forEach(x => x.disabled = true);
+            api.say('В точку! Теперь этот трюк на тебя не сработает.', 'ok');
+            $('.opts', api.stage).insertAdjacentHTML('afterend', `<div class="row" style="justify-content:center;margin-top:16px"><button class="btn coral" id="nx">${k + 1 < ADS.length ? 'Следующая реклама →' : 'Завершить'}</button></div>`);
+            $('#nx').onclick = () => { api.clear(); k++; k < ADS.length ? show() : api.finish('Перед покупкой задай себе 3 вопроса. 1) Зачем мне это: это моё желание или реклама? 2) Изменит ли это мою жизнь или я забуду о покупке через день? 3) Что важнее: эта вещь или моя цель? Ты сам решаешь, на что тратить деньги.'); };
+          } else {
+            first = false; sfx.bad(); b.classList.add('wrong'); b.disabled = true;
+            api.say('Не тот трюк. Перечитай рекламу: на что она давит?', 'bad');
+          }
+        });
+      };
+      show();
+    };
+  }
+},
+
+/* ---------- 9. Где хранить деньги ---------- */
+{
+  id: 'store', lesson: 3, icon: '🏦', title: 'Где хранить деньги?', max: 30,
+  task: 'У каждого способа хранения своя задача. Разложи цели по местам хранения.',
+  play(api) {
+    const WHY = {
+      pig: 'Копилка удобна для небольших сумм, которые скоро понадобятся.',
+      acc: 'Накопительный счёт: деньги лежат в банке, их можно класть и снимать в любой момент, а банк добавляет немного процентов.',
+      dep: 'Вклад: деньги лежат в банке долго, процент выше. Но если снять раньше срока, проценты не начислятся!'
+    };
+    sorter(api.stage, {
+      bins: [
+        { id: 'pig', icon: '🐷', title: 'Копилка', hint: 'Мелкие суммы на ближайшее время' },
+        { id: 'acc', icon: '💳', title: 'Накопительный счёт', hint: 'Можно пополнять и снимать, банк платит немного процентов' },
+        { id: 'dep', icon: '🔒', title: 'Вклад', hint: 'Надолго, процент выше, снимать раньше срока нельзя' },
+      ],
+      items: shuffle([
+        { text: 'Мелочь на мороженое в выходные', accept: ['pig'] },
+        { text: 'Сдача из магазина на мелкие покупки', accept: ['pig'] },
+        { text: 'Копишь на телефон полгода и хочешь пополнять каждую неделю', accept: ['acc'] },
+        { text: 'Копишь на велосипед, но деньги могут понадобиться в любой момент', accept: ['acc', 'pig'] },
+        { text: 'Копишь на учёбу через 5 лет и точно не будешь трогать деньги', accept: ['dep'] },
+        { text: 'Подарок бабушки, который не понадобится ещё год', accept: ['dep'] },
+      ]),
+      onCorrect: (it, first, bin) => { if (first) api.coin(5); api.say('Верно! ' + WHY[bin], 'ok'); },
+      onWrong: (it, bin) => api.say('Не подходит. ' + WHY[bin], 'bad'),
+      onDone: () => api.finish('Для быстрых трат подойдут копилка и накопительный счёт. Если копишь на что-то крупное и готов ждать, выбирай вклад. Кошелёк подходит для небольших сумм, но из него легко потратить деньги раньше времени.')
+    });
+  }
+},
+
+/* ---------- 10. Съешь лягушку ---------- */
+{
+  id: 'frog', lesson: 3, icon: '🐸', title: 'Съешь лягушку', max: 30,
+  task: '«Лягушка» — это важное, но неприятное дело, которое мы постоянно откладываем. Разбей его на маленькие шаги, и оно станет простым.',
+  play(api) {
+    const FROGS = [
+      ['Подготовиться к контрольной по математике', ['Повторить правила в учебнике', 'Решить 5 примеров', 'Проверить ответы и разобрать ошибки']],
+      ['Разобрать письменный стол', ['Выбросить мусор и старые бумажки', 'Сложить ручки и карандаши в стакан', 'Расставить книги и тетради']],
+      ['Выучить стихотворение наизусть', ['Прочитать стих 3 раза вслух', 'Выучить первое четверостишие', 'Рассказать стих маме целиком']],
+      ['Написать сочинение или доклад', ['Придумать план из 3 пунктов', 'Написать вступление', 'Написать основную часть и вывод']],
+      ['Навести порядок в шкафу с одеждой', ['Освободить одну полку', 'Сложить футболки стопкой', 'Отложить вещи, которые стали малы']],
+      ['Помочь родителям с генеральной уборкой', ['Протереть пыль в своей комнате', 'Пропылесосить', 'Вынести мусор']],
+      ['Разобрать старые игрушки', ['Собрать все игрушки в одном месте', 'Разложить на три кучки: оставить, отдать, продать', 'Сфотографировать то, что продаю']],
+      ['Составить расписание на неделю', ['Записать уроки и секции', 'Добавить домашние дела', 'Отметить время для отдыха']],
+      ['Посчитать свои накопления', ['Пересчитать деньги в копилке', 'Записать сумму в тетрадь', 'Посчитать, сколько ещё нужно для цели']],
+      ['Прочитать главу учебника и выписать главное', ['Прочитать главу один раз', 'Подчеркнуть важные мысли', 'Выписать 3 главные мысли']],
+    ];
+    const pick = () => {
+      api.stage.innerHTML = `<p class="lead">Выбери свою «лягушку» — самое неприятное дело, которое ты откладываешь.</p>
+        <div class="frog-list">${FROGS.map((f, i) => `<button data-i="${i}">🐸 ${f[0]}</button>`).join('')}</div>
+        <form id="own" class="row" style="margin-top:14px"><input class="inp" id="ownT" maxlength="80" placeholder="Или напиши своё дело" style="flex:1 1 220px"><button class="btn">Выбрать</button></form>`;
+      $$('.frog-list button', api.stage).forEach(b => b.onclick = () => split(FROGS[+b.dataset.i][0], FROGS[+b.dataset.i][1]));
+      $('#own').onsubmit = e => { e.preventDefault(); const t = $('#ownT').value.trim(); if (t.length < 4) { api.say('Напиши своё дело подробнее.', 'bad'); return; } split(t, ['Подготовить всё нужное', 'Сделать первую маленькую часть', 'Доделать и проверить']); };
+    };
+    const split = (task, tips) => {
+      api.clear();
+      api.stage.innerHTML = `<div class="dream-card"><small>Моя лягушка</small><b>🐸 ${esc(task)}</b></div>
+        <p class="lead">Разбей дело на маленькие шаги. Каждый шаг должен быть таким, чтобы его можно было сделать за 5–15 минут.</p>
+        <div id="steps">${[0, 1, 2].map(i => `<label class="wish-in"><span>${i + 1}</span><input class="inp st" maxlength="80" placeholder="Шаг ${i + 1}"></label>`).join('')}</div>
+        <div class="row" style="margin-top:12px"><button class="btn ghost" id="add">+ Ещё шаг</button><button class="btn ghost" id="tip">Подсказка</button><button class="btn primary" id="go">Готово</button></div>`;
+      $('#add').onclick = () => { const n = $$('.st', api.stage).length; if (n >= 6) return; $('#steps').insertAdjacentHTML('beforeend', `<label class="wish-in"><span>${n + 1}</span><input class="inp st" maxlength="80" placeholder="Шаг ${n + 1}"></label>`); };
+      $('#tip').onclick = () => $$('.st', api.stage).forEach((el, i) => { if (!el.value.trim() && tips[i]) el.value = tips[i]; });
+      $('#go').onclick = () => {
+        const steps = $$('.st', api.stage).map(x => x.value.trim()).filter(Boolean);
+        if (steps.length < 3) { sfx.bad(); api.say('Нужно минимум 3 шага. Если сложно, нажми «Подсказка».', 'bad'); return; }
+        api.coin(15); eat(task, steps);
+      };
+    };
+    const eat = (task, steps) => {
+      api.clear();
+      api.stage.innerHTML = `<p class="lead">Отмечай шаги, когда их сделаешь. С каждым шагом лягушка становится меньше!</p>
+        <div class="frog-stage"><div class="frog" id="frog">🐸</div>
+          <ul class="checks">${steps.map((s, i) => `<li><label><input type="checkbox" id="c${i}"><span>${esc(s)}</span></label></li>`).join('')}</ul></div>
+        <div class="timer"><div><strong>🍅 Метод «Помидора»</strong><br><span class="hint">25 минут работаешь без отвлечений, потом 5 минут отдыхаешь.</span></div><b id="tm">25:00</b><div class="row"><button class="btn" id="tGo">Старт</button><button class="btn ghost" id="tRe">Сброс</button></div></div>`;
+      let done = false;
+      $$('.checks input', api.stage).forEach(c => c.onchange = () => {
+        const n = $$('.checks input:checked', api.stage).length;
+        $('#frog').style.setProperty('--s', Math.max(.25, 1 - n / steps.length * .75));
+        sfx.tap();
+        if (n === steps.length && !done) {
+          done = true; $('#frog').textContent = '😋'; $('#frog').style.setProperty('--s', 1);
+          api.coin(15);
+          api.say('Лягушка съедена! Самое неприятное уже позади.', 'ok');
+          $('.timer', api.stage).insertAdjacentHTML('afterend', `<div class="row" style="justify-content:center;margin-top:16px"><button class="btn coral" id="nx">Завершить</button></div>`);
+          $('#nx').onclick = () => api.finish('Любую сложную задачу легче сделать, если разбить её на маленькие шаги. Метод «Лягушки»: самое неприятное дело — утром. Метод «Помидора»: 25 минут работы без телефона, потом 5 минут отдыха. Метод «Ракеты»: каждый день делай 2–3 маленьких шага к большой цели, и через месяц удивишься, сколько уже сделано.');
+        }
+      });
+      let sec = 25 * 60, t = null;
+      const draw = () => $('#tm').textContent = `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+      $('#tGo').onclick = () => {
+        if (t) { clearInterval(t); timers.delete(t); t = null; $('#tGo').textContent = 'Продолжить'; return; }
+        $('#tGo').textContent = 'Пауза';
+        t = setInterval(() => { sec--; draw(); if (sec <= 0) { clearInterval(t); timers.delete(t); t = null; sfx.win(); $('#tGo').textContent = 'Старт'; sec = 25 * 60; api.say('Помидор готов! Сделай 5-минутный перерыв.', 'ok'); } }, 1000);
+        timers.add(t);
+      };
+      $('#tRe').onclick = () => { if (t) { clearInterval(t); timers.delete(t); t = null; } sec = 25 * 60; draw(); $('#tGo').textContent = 'Старт'; };
+    };
+    pick();
+  }
+},
+];
+STATIONS.forEach((s, i) => s.n = i + 1);
+
+/* =========================================================
+   ЭКРАНЫ
+   ========================================================= */
+function topbar(extra = '') {
+  return `<header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true">⛵</span><div><b>Остров КиберФин</b><small>Финансовая грамотность</small></div></div>
+    <div class="top-actions">${extra}<span class="coins" id="coinTotal" title="Мои монеты">🪙 <b>${totalCoins()}</b></span>
+      <button class="icon-btn" id="snd" aria-label="${S.sound ? 'Выключить звук' : 'Включить звук'}">${S.sound ? '🔊' : '🔇'}</button></div>
+  </header>`;
+}
+function bindTop() {
+  $('#snd').onclick = () => { S.sound = !S.sound; save(); const b = $('#snd'); b.textContent = S.sound ? '🔊' : '🔇'; b.setAttribute('aria-label', S.sound ? 'Выключить звук' : 'Включить звук'); sfx.tap(); };
+}
+
+function showMap() {
+  clearTimers();
+  const done = STATIONS.filter(s => S.st[s.id]?.done).length;
+  const stop = s => {
+    const r = S.st[s.id];
+    return `<li><button class="stop ${r?.done ? 'done' : ''}" data-id="${s.id}">
+      <span class="stop-num">${r?.done ? '✓' : s.n}</span><span class="stop-ico" aria-hidden="true">${s.icon}</span>
+      <span class="stop-title">${s.title}</span>
+      <span class="stop-meta">${r?.done ? `Пройдено · 🪙 ${r.coins} из ${s.max}` : `До ${s.max} монет`}</span>
+    </button></li>`;
+  };
+  const gl = S.goal;
+  app.innerHTML = `<div class="wrap">
+    ${topbar()}
+    <section class="hero">
+      <div>
+        <p class="eyebrow">${S.name ? 'Капитан ' + esc(S.name) : 'Капитан'}</p>
+        <h1>Плыви от <em>мечты</em> к цели</h1>
+        <p>Проходи станции на двух островах, собирай монеты и учись управлять деньгами: ставить цели, копить и не тратить лишнего.</p>
+      </div>
+      <div class="compass" style="--p:${done / STATIONS.length * 100}"><div class="compass-in"><b>${done}/${STATIONS.length}</b><small>станций</small></div></div>
+    </section>
+    ${done === STATIONS.length ? `<section class="cert">
+      <p class="eyebrow">Диплом КиберФин</p><h2>Капитан финансов</h2>
+      <p class="cert-name">${esc(S.name)}</p>
+      <p style="font-weight:700;margin:0">Все ${STATIONS.length} станций пройдены · собрано ${totalCoins()} монет</p>
+      ${gl ? `<div class="cert-goal">Моя цель: ${esc(gl.what)} за ${rub(gl.cost)}.<br>Откладываю по ${rub(Math.ceil(gl.cost / (gl.months * 4)))} в неделю.</div>` : ''}
+    </section>` : ''}
+    <section class="island">
+      <div class="island-head"><span class="tag">Урок 2</span><h2>Остров Целей</h2><p>Отличаем мечту от цели, выбираем главную мечту и составляем план.</p></div>
+      <ol class="route">${STATIONS.filter(s => s.lesson === 2).map(stop).join('')}</ol>
+    </section>
+    <div class="lesson-divider" role="separator"><span>Конец урока 2</span><span class="anchor" aria-hidden="true">⚓</span><span>Начало урока 3</span></div>
+    <section class="island second">
+      <div class="island-head"><span class="tag">Урок 3</span><h2>Остров Копилок</h2><p>Разбираемся, куда уходят деньги, как их копить и не попадаться на импульсивные покупки.</p></div>
+      <ol class="route">${STATIONS.filter(s => s.lesson === 3).map(stop).join('')}</ol>
+    </section>
+    <footer class="foot" id="foot"><button class="btn" id="rename">Сменить имя</button><button class="btn" id="reset">Начать заново</button></footer>
+  </div>`;
+  bindTop();
+  $$('.stop').forEach(b => b.onclick = () => { sfx.tap(); openStation(b.dataset.id); });
+  $('#rename').onclick = () => askName();
+  $('#reset').onclick = () => {
+    $('#foot').innerHTML = `<span>Стереть все монеты и ответы?</span><button class="btn" id="yes">Да, стереть</button><button class="btn" id="no">Нет</button>`;
+    $('#yes').onclick = () => { const snd = S.sound; S = fresh(); S.sound = snd; save(); showMap(); askName(); };
+    $('#no').onclick = showMap;
+  };
+}
+
+function askName() {
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.innerHTML = `<form class="modal" id="nf">
+    <div class="big" aria-hidden="true">⛵</div>
+    <h2>Добро пожаловать на борт!</h2>
+    <p style="margin:0;font-weight:700">Впереди два острова и 10 станций. Как тебя зовут, капитан?</p>
+    <input class="inp" id="nm" maxlength="24" placeholder="Твоё имя" value="${esc(S.name)}" autocomplete="off" style="text-align:center;font-size:1.2rem">
+    <button class="btn primary">Поплыли!</button>
+  </form>`;
+  document.body.append(ov);
+  const nm = $('#nm', ov); nm.focus();
+  $('#nf', ov).onsubmit = e => {
+    e.preventDefault();
+    const v = nm.value.trim();
+    if (!v) { nm.focus(); nm.placeholder = 'Напиши имя, чтобы начать'; return; }
+    S.name = v; save(); ov.remove(); sfx.win(); showMap();
+  };
+}
+
+function openStation(id) {
+  clearTimers();
+  const st = STATIONS.find(s => s.id === id);
+  let run = 0;
+  // в общий баланс идёт лучший результат станции, поэтому повтор не «накручивает» монеты
+  const prev = S.st[id]?.coins || 0;
+  const base = totalCoins() - prev;
+  const balance = () => base + Math.max(prev, run);
+  const inLesson = STATIONS.filter(s => s.lesson === st.lesson);
+  const pos = inLesson.indexOf(st) + 1;
+  app.innerHTML = `<div class="wrap">
+    <header class="game-top">
+      <button class="btn back" id="back">← Карта</button>
+      <div class="game-title"><span class="tag">Урок ${st.lesson} · станция ${pos} из ${inLesson.length}</span><h1>${st.icon} ${st.title}</h1></div>
+      <span class="coins" id="runCoins" title="Всего монет">🪙 <b>${balance()}</b></span>
+    </header>
+    <main class="sheet">
+      <p class="task" id="task">${st.task}</p>
+      <div id="stage"></div>
+      <div class="feedback" id="fb" aria-live="polite"></div>
+    </main>
+  </div>`;
+  window.scrollTo(0, 0);
+  $('#back').onclick = () => { sfx.tap(); showMap(); };
+  const api = {
+    stage: $('#stage'),
+    coin(n) { run += n; $('#runCoins b').textContent = balance(); sfx.coin(); popAt($('#runCoins'), '+' + n); },
+    say(html, kind = 'info') { const fb = $('#fb'); fb.className = 'feedback'; void fb.offsetWidth; fb.className = 'feedback show ' + kind; fb.innerHTML = html; },
+    clear() { const fb = $('#fb'); fb.className = 'feedback'; fb.innerHTML = ''; },
+    finish(summary) {
+      clearTimers();
+      S.st[id] = { done: true, coins: Math.max(prev, run) }; save();
+      const nextSt = STATIONS[st.n] || null;
+      const lessonEnds = nextSt && nextSt.lesson !== st.lesson;
+      api.clear(); $('#task').hidden = true;
+      sfx.win(); confetti();
+      api.stage.innerHTML = `<div class="finish">
+        <div class="finish-badge" aria-hidden="true">${st.icon}</div>
+        <h2>Станция пройдена!</h2>
+        <p class="finish-coins">+${run} 🪙</p>
+        <p style="margin:0;font-weight:800">Всего монет: ${totalCoins()}</p>
+        ${prev && run <= prev ? `<p class="muted" style="margin:0;font-weight:700">Рекорд этой станции — ${prev} монет. Монеты за повтор добавятся, только если побить рекорд.</p>` : ''}
+        ${prev && run > prev ? `<p class="muted" style="margin:0;font-weight:700">Новый рекорд! Было ${prev}, стало ${run}.</p>` : ''}
+        <div class="lesson-box"><b>Запомни</b><p>${summary}</p></div>
+        ${lessonEnds ? `<div class="lesson-end">⚓ Это последняя станция урока ${st.lesson}! Дальше начинается урок ${nextSt.lesson}.</div>` : ''}
+        <div class="row" style="justify-content:center">
+          <button class="btn" id="again">Ещё раз</button>
+          <button class="btn ghost" id="toMap">На карту</button>
+          ${nextSt ? `<button class="btn primary" id="next">${lessonEnds ? `Перейти к уроку ${nextSt.lesson} →` : `Дальше: ${nextSt.title} →`}</button>` : ''}
+        </div>
+      </div>`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      $('#again').onclick = () => openStation(id);
+      $('#toMap').onclick = showMap;
+      if (nextSt) $('#next').onclick = () => openStation(nextSt.id);
+    }
+  };
+  st.play(api);
+}
+
+/* ---------- запуск ---------- */
+const start = data => {
+  if (data && data.S) S = Object.assign(fresh(), data.S);
+  showMap();
+  if (!S.name) askName();
+};
+window.claude?.hot?.snapshot?.(() => ({ S }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body>
+</html>
