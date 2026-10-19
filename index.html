@@ -313,6 +313,46 @@ h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:
 .pop{position:fixed;z-index:60;font-family:var(--font-display);font-weight:800;color:var(--sun);text-shadow:0 2px 0 rgba(0,0,0,.35);pointer-events:none;animation:rise 1s ease forwards}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:70;width:100%;height:100%}
 
+/* урок 4 */
+.studio{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.photo{position:relative;aspect-ratio:4/3;max-width:100%;border-radius:18px;overflow:hidden;border:6px solid var(--paper-2);box-shadow:0 6px 0 var(--line);background:var(--paper-2)}
+.photo.mess{background:repeating-linear-gradient(135deg,var(--sand) 0 18px,var(--sand-2) 18px 36px)}
+.photo-in{position:absolute;inset:0;display:grid;place-items:center;transition:filter .3s}
+.photo.dark .photo-in{filter:brightness(.35) saturate(.6)}
+.photo.shake .photo-in{filter:blur(4px)}
+.photo.dark.shake .photo-in{filter:brightness(.35) saturate(.6) blur(4px)}
+.photo-item{font-size:clamp(3.5rem,11vw,5.5rem);line-height:1}
+.clutter{position:absolute;font-size:2rem;line-height:1}
+.photo-tag{position:absolute;left:10px;bottom:10px;background:var(--ink);color:var(--paper);border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:900}
+.settings{display:grid;gap:14px}
+.setting b{display:block;margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.rules{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:6px;font-weight:800}
+.rules li.ok{color:var(--ok)}
+.rules li.no{color:var(--ink-soft)}
+.adv{border:3px solid var(--line);border-radius:20px;overflow:hidden;background:var(--paper)}
+.adv-img{aspect-ratio:16/9;max-width:100%;background:var(--paper-2);display:grid;place-items:center;font-size:3.5rem}
+.adv-body{padding:12px 16px}
+.adv-price{font-family:var(--font-display);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.adv-title{font-weight:900;font-size:1.05rem;margin:2px 0 6px;overflow-wrap:anywhere}
+.adv-desc{margin:0;font-weight:600;color:var(--ink-soft);overflow-wrap:anywhere}
+.adv-head{font-size:.75rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+.meter{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.meter span{border-radius:999px;padding:4px 10px;font-size:.8rem;font-weight:900;background:var(--paper-2);color:var(--ink-soft);border:2px solid var(--line)}
+.meter span.on{background:var(--ok-bg);border-color:var(--ok);color:var(--ink)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pair button{border:3px solid var(--line);background:var(--paper-2);border-radius:18px;padding:16px;font-weight:800;text-align:left;font-size:1.05rem}
+.pair button.right{border-color:var(--ok);background:var(--ok-bg)}
+.pair button.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.bad-ad{background:var(--bad-bg);border-radius:16px;padding:12px 16px;font-weight:800;margin-bottom:16px}
+.similar{list-style:none;padding:0;margin:10px 0 16px;display:grid;gap:6px}
+.similar li{display:flex;justify-content:space-between;gap:10px;background:var(--paper-2);border-radius:12px;padding:8px 12px;font-weight:700}
+.similar b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.price-big{font-family:var(--font-display);font-size:2rem;color:var(--coral);text-align:center;font-variant-numeric:tabular-nums}
+.buyer{font-size:2.6rem;text-align:center;line-height:1;margin:8px 0}
+.island-count{margin-left:auto;font-weight:900;color:var(--ink-soft);font-size:.9rem}
+@media (max-width:640px){ .studio,.pair{grid-template-columns:1fr} }
+
 @keyframes pop{0%{transform:scale(.85);opacity:.4}100%{transform:scale(1);opacity:1}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 @keyframes rise{0%{transform:translate(-50%,0);opacity:1}100%{transform:translate(-50%,-60px);opacity:0}}
@@ -1098,8 +1138,339 @@ const STATIONS = [
     pick();
   }
 },
+
+/* ---------- 11. Фотостудия ---------- */
+{
+  id: 'photo', lesson: 4, icon: '📸', title: 'Фотостудия', max: 30,
+  task: 'Покупатель сначала смотрит на фото, а уже потом читает описание. Настрой студию так, чтобы игрушку захотелось купить.',
+  play(api) {
+    const SET = [
+      { k: 'light', t: '💡 Свет', c: [['dark', 'Тёмная комната'], ['window', 'У окна']], good: 'window', rule: 'Хорошее освещение', tip: 'Фото тёмное. Поставь вещь у окна или включи свет, чтобы не было тёмных теней.' },
+      { k: 'bg', t: '🖼️ Фон', c: [['mess', 'Стол с кучей вещей'], ['plain', 'Однотонный лист']], good: 'plain', rule: 'Чистый фон', tip: 'На фоне куча лишних вещей. Положи игрушку на однотонный лист, простыню или картон.' },
+      { k: 'focus', t: '🎯 Камера', c: [['shake', 'Снимаю на ходу'], ['steady', 'Держу ровно']], good: 'steady', rule: 'Чёткое фото', tip: 'Фото размытое. Держи телефон ровно, лучше двумя руками.' },
+      { k: 'use', t: '🧸 Как показать', c: [['none', 'Просто лежит'], ['play', 'В действии']], good: 'play', rule: 'Пример использования', tip: 'Покажи игрушку в действии, так покупатель поймёт, как с ней играть.' },
+    ];
+    const s = { light: 'dark', bg: 'mess', focus: 'shake', use: 'none' };
+    const CL = [['🧦', '8%', '10%'], ['📚', '74%', '12%'], ['🍕', '10%', '68%'], ['🔌', '78%', '66%'], ['🥤', '44%', '6%']];
+    let tries = 0;
+    api.stage.innerHTML = `
+      <div class="studio">
+        <div>
+          <div class="photo" id="ph"><div class="photo-in">
+            <div id="cl">${CL.map(([e, x, y]) => `<span class="clutter" style="left:${x};top:${y}">${e}</span>`).join('')}</div>
+            <div class="photo-item" id="it">🚗</div>
+          </div><span class="photo-tag">Так увидит покупатель</span></div>
+          <ul class="rules" id="rules"></ul>
+        </div>
+        <div class="settings">
+          ${SET.map(x => `<div class="setting"><b>${x.t}</b><div class="seg">${x.c.map(([v, l]) => `<button class="chip" data-k="${x.k}" data-v="${v}" aria-pressed="${s[x.k] === v}">${l}</button>`).join('')}</div></div>`).join('')}
+          <div><button class="btn primary" id="shot">📸 Сделать фото</button></div>
+        </div>
+      </div>`;
+    const upd = () => {
+      $('#ph').className = 'photo' + (s.bg === 'mess' ? ' mess' : '') + (s.light === 'dark' ? ' dark' : '') + (s.focus === 'shake' ? ' shake' : '');
+      $('#cl').hidden = s.bg !== 'mess';
+      $('#it').textContent = s.use === 'play' ? '🏁🏎️💨' : '🚗';
+      $('#rules').innerHTML = SET.map(x => `<li class="${s[x.k] === x.good ? 'ok' : 'no'}">${s[x.k] === x.good ? '✓' : '○'} ${x.rule}</li>`).join('');
+    };
+    $$('.seg .chip', api.stage).forEach(b => b.onclick = () => {
+      s[b.dataset.k] = b.dataset.v;
+      $$(`.chip[data-k="${b.dataset.k}"]`, api.stage).forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      sfx.tap(); upd();
+    });
+    $('#shot').onclick = () => {
+      const bad = SET.find(x => s[x.k] !== x.good);
+      if (bad) { tries++; sfx.bad(); api.say(bad.tip, 'bad'); return; }
+      sfx.ok(); api.coin(tries < 2 ? 15 : 8);
+      api.say('Отличный кадр: светло, чётко и ничего лишнего!', 'ok');
+      $('#shot').disabled = true;
+      setTimeout(angles, 1200);
+    };
+    upd();
+    const angles = () => {
+      api.clear();
+      const A = shuffle([
+        { t: 'Вид спереди', need: true },
+        { t: 'Вид сбоку или сверху', need: true },
+        { t: 'Крупный план деталей', need: true },
+        { t: 'Честное фото царапины, если она есть', ok: true },
+        { t: 'Селфи, где игрушку почти не видно', bad: 'На селфи вещь почти не видно, покупатель не поймёт, что продаётся.' },
+        { t: 'Красивая картинка такой же машинки из интернета', bad: 'Чужая картинка — это обман. Покупатель должен видеть именно твою вещь.' },
+        { t: 'Фото в темноте под одеялом', bad: 'В темноте ничего не видно.' },
+      ]);
+      let first = true;
+      api.stage.innerHTML = `
+        <p class="lead">Для объявления нужно 3–4 фото с разных ракурсов. Выбери, какие фото сделать.</p>
+        <div class="chips">${A.map((a, i) => `<button class="chip" data-i="${i}" aria-pressed="false">${a.t}</button>`).join('')}</div>
+        <button class="btn primary" id="ok">Готово</button>`;
+      $$('.chip', api.stage).forEach(c => c.onclick = () => { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); sfx.tap(); });
+      $('#ok').onclick = () => {
+        const picked = $$('.chip[aria-pressed="true"]', api.stage).map(c => A[+c.dataset.i]);
+        const wrong = picked.find(a => a.bad);
+        const missing = A.filter(a => a.need && !picked.includes(a));
+        if (wrong) { first = false; sfx.bad(); api.say(wrong.bad, 'bad'); return; }
+        if (missing.length) { first = false; sfx.bad(); api.say('Не хватает фото: ' + missing.map(a => a.t.toLowerCase()).join(', ') + '.', 'bad'); return; }
+        sfx.ok(); if (first) api.coin(15);
+        api.finish('Хорошее фото — ключ к успешной продаже. Правила: хороший свет, чистый однотонный фон, чёткий кадр, 3–4 ракурса (спереди, сбоку или сверху, крупный план) и честное фото дефектов. Если можно, покажи вещь в действии.');
+      };
+    };
+  }
+},
+
+/* ---------- 12. Объявление, которое продаёт ---------- */
+{
+  id: 'advert', lesson: 4, icon: '✍️', title: 'Объявление, которое продаёт', max: 40,
+  task: 'Если описание непонятное или слишком короткое, покупатель закроет объявление и уйдёт к другому продавцу. Научись писать так, чтобы вещь купили быстрее.',
+  play(api) {
+    const PAIRS = shuffle([
+      ['Игрушечная машинка Hot Wheels, почти новая', 'Машинка, старая', 'Хорошее название говорит, что это за вещь, какой она марки и в каком состоянии.'],
+      ['Книга «Денискины рассказы», твёрдая обложка', 'Книга', 'Из слова «Книга» непонятно, какая это книга. Её даже не найдут в поиске.'],
+      ['Школьный рюкзак для 1–4 класса, без пятен', 'ПРОДАМ СРОЧНО!!!', 'Крик и восклицательные знаки ничего не говорят о самой вещи.'],
+    ]);
+    let k = 0;
+    const titles = () => {
+      const [good, bad, why] = PAIRS[k];
+      const opts = shuffle([good, bad]);
+      api.stage.innerHTML = `<p class="lead">Какое название лучше? (${k + 1} из ${PAIRS.length})</p>
+        <div class="pair">${opts.map(o => `<button data-g="${o === good ? 1 : 0}">«${esc(o)}»</button>`).join('')}</div>`;
+      $$('.pair button', api.stage).forEach(b => b.onclick = () => {
+        $$('.pair button', api.stage).forEach(x => { x.disabled = true; if (x.dataset.g === '1') x.classList.add('right'); });
+        if (b.dataset.g === '1') { sfx.ok(); api.coin(5); api.say('Верно! ' + why, 'ok'); }
+        else { b.classList.add('wrong'); sfx.bad(); api.say('Не это. ' + why, 'bad'); }
+        $('.pair', api.stage).insertAdjacentHTML('afterend', `<div class="row" style="justify-content:center;margin-top:16px"><button class="btn coral" id="nx">${k + 1 < PAIRS.length ? 'Следующее →' : 'Писать описание →'}</button></div>`);
+        $('#nx').onclick = () => { api.clear(); k++; k < PAIRS.length ? titles() : builder(); };
+      });
+    };
+    const COND = ['новая', 'почти новая', 'чуть поношенная', 'есть небольшой дефект'];
+    const icon = t => /рюкзак|сумк|портфел/i.test(t) ? '🎒' : /книг|энциклопед|комикс/i.test(t) ? '📕' : /машин/i.test(t) ? '🚗' : /конструктор|лего|lego|пазл/i.test(t) ? '🧩' : /самокат/i.test(t) ? '🛴' : /куртк|кофт|плать|футболк|одежд|джинс/i.test(t) ? '👕' : /игрушк|медвед|кукл/i.test(t) ? '🧸' : '📦';
+    const builder = () => {
+      let cond = '', first = true;
+      api.stage.innerHTML = `
+        <div class="bad-ad">🔴 Плохое описание: «Продаю рюкзак. Хороший.»<br><span style="font-weight:700">Непонятно, какого он размера, есть ли дефекты и для кого он подходит.</span></div>
+        <p class="lead">Напиши хорошее описание своей вещи. Справа видно, как его увидит покупатель.</p>
+        <div class="studio">
+          <div>
+            <label class="field"><span>Что это за вещь?</span><input id="aW" maxlength="60" placeholder="Например: школьный рюкзак" autocomplete="off"></label>
+            <div class="field"><span>В каком она состоянии?</span><div class="seg">${COND.map(c => `<button class="chip" data-c="${c}" aria-pressed="false">${c}</button>`).join('')}</div></div>
+            <label class="field"><span>Для кого она подходит?</span><input id="aF" maxlength="60" placeholder="Например: для учеников младших классов" autocomplete="off"></label>
+            <label class="field"><span>Какие у неё особенности?</span><input id="aX" maxlength="80" placeholder="Например: много карманов, удобные лямки" autocomplete="off"></label>
+            <label class="field"><span>Цена, ₽</span><input id="aP" type="number" inputmode="numeric" min="0" placeholder="Например: 800"></label>
+          </div>
+          <div>
+            <div class="adv-head">Так увидит покупатель</div>
+            <div class="adv"><div class="adv-img" id="pvI">📦</div><div class="adv-body"><div class="adv-price" id="pvP"></div><div class="adv-title" id="pvT"></div><p class="adv-desc" id="pvD"></p></div></div>
+            <div class="meter" id="mt"></div>
+            <button class="btn primary" id="pub">Опубликовать</button>
+          </div>
+        </div>`;
+      const val = id => $('#' + id).value.trim();
+      const upd = () => {
+        const w = val('aW'), f = val('aF'), x = val('aX'), p = Number(val('aP'));
+        $('#pvI').textContent = icon(w);
+        $('#pvP').textContent = p > 0 ? rub(p) : 'Цена не указана';
+        $('#pvT').textContent = w ? w[0].toUpperCase() + w.slice(1) + (cond ? ', ' + cond : '') : 'Название вещи';
+        $('#pvD').textContent = [w && `Продам ${w}.`, cond && `Состояние: ${cond}.`, f && `Подходит ${f}.`, x && (x[0].toUpperCase() + x.slice(1) + (/[.!]$/.test(x) ? '' : '.')), p > 0 && `Цена — ${rub(p)}.`].filter(Boolean).join(' ') || 'Здесь появится описание.';
+        const checks = [['Что это', w.length >= 3], ['Состояние', !!cond], ['Для кого', f.length >= 3], ['Особенности', x.length >= 5], ['Цена', p > 0]];
+        $('#mt').innerHTML = checks.map(([t, ok]) => `<span class="${ok ? 'on' : ''}">${ok ? '✓' : '○'} ${t}</span>`).join('');
+        return checks.filter(c => !c[1]).map(c => c[0].toLowerCase());
+      };
+      $$('.seg .chip', api.stage).forEach(b => b.onclick = () => { cond = b.dataset.c; $$('.seg .chip', api.stage).forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); sfx.tap(); upd(); });
+      ['aW', 'aF', 'aX', 'aP'].forEach(id => $('#' + id).oninput = upd);
+      $('#pub').onclick = () => {
+        const miss = upd();
+        if (miss.length) { first = false; sfx.bad(); api.say('В объявлении не хватает: ' + miss.join(', ') + '.', 'bad'); return; }
+        sfx.ok(); api.coin(first ? 25 : 15);
+        api.finish('Хорошее описание помогает быстрее найти покупателя. Укажи, что это за вещь, в каком она состоянии, для кого подходит, какие у неё особенности и сколько она стоит. А в названии — что это и какое состояние.');
+      };
+      upd();
+    };
+    titles();
+  }
+},
+
+/* ---------- 13. Справедливая цена ---------- */
+{
+  id: 'price', lesson: 4, icon: '🏷️', title: 'Справедливая цена', max: 40,
+  task: 'Цена зависит от состояния вещи, её популярности и цен на похожие товары. Посмотри на похожие объявления и назначь честную цену.',
+  play(api) {
+    const R = [
+      { ico: '🎒', name: 'Школьный рюкзак', cond: 'хорошее, без пятен', sim: [['Рюкзак, как новый, с биркой', 2000], ['Рюкзак, хорошее состояние', 1200], ['Рюкзак, потёртый, сломана молния', 500]], fair: [900, 1500] },
+      { ico: '🧸', name: 'Мягкий медведь', cond: 'почти новый, чистый', sim: [['Медведь, новый, с биркой', 900], ['Медведь, почти новый', 550], ['Медведь, без одного глаза', 200]], fair: [400, 700] },
+      { ico: '📕', name: 'Книга «Денискины рассказы»', cond: 'обложка чуть потрёпана', sim: [['Новая, в магазине', 650], ['Как новая', 450], ['Потрёпанная обложка', 300]], fair: [250, 400] },
+      { ico: '🛴', name: 'Самокат', cond: 'есть царапины, всё работает', sim: [['Новый, в магазине', 6000], ['Почти новый', 4000], ['С царапинами, исправный', 2500]], fair: [2000, 3200] },
+    ];
+    let i = 0;
+    const show = () => {
+      const r = R[i], top = Math.max(...r.sim.map(x => x[1]));
+      const max = Math.ceil(top * 1.3 / 50) * 50;
+      let first = true;
+      api.stage.innerHTML = `
+        <p class="prob-step">Вещь ${i + 1} из ${R.length}</p>
+        <div class="exp-card"><div class="exp-ico">${r.ico}</div><h3>Ты продаёшь: ${r.name}</h3><p class="muted" style="margin:0;font-weight:800">Состояние: ${r.cond}</p></div>
+        <p class="lead" style="margin-top:16px">Похожие объявления на сайте:</p>
+        <ul class="similar">${r.sim.map(([t, p]) => `<li><span>${t}</span><b>${rub(p)}</b></li>`).join('')}</ul>
+        <div class="price-big" id="pv"></div>
+        <label class="slider">Твоя цена<input type="range" id="pr" min="50" max="${max}" step="50" value="${max}"></label>
+        <div class="buyer" id="by" aria-hidden="true">🤔</div>
+        <div class="row" style="justify-content:center"><button class="btn primary" id="chk">Выставить на продажу</button></div>`;
+      const pr = $('#pr');
+      const upd = () => { $('#pv').textContent = rub(+pr.value); };
+      pr.oninput = upd; upd();
+      $('#chk').onclick = () => {
+        const p = +pr.value;
+        if (p > r.fair[1]) { first = false; sfx.bad(); $('#by').textContent = '😒'; api.say('Слишком дорого! За такие деньги можно найти вещь получше. Покупатели уйдут к другим продавцам. Сравни состояние своей вещи с похожими.', 'bad'); return; }
+        if (p < r.fair[0]) { first = false; sfx.bad(); $('#by').textContent = '🤑'; api.say('Слишком дёшево! Вещь купят сразу, но ты теряешь деньги: похожие вещи стоят дороже.', 'bad'); return; }
+        sfx.ok(); if (first) api.coin(10);
+        $('#by').textContent = '😍';
+        $('#chk').disabled = true; pr.disabled = true;
+        api.say(`Честная цена! Покупатели пишут: «Беру!». Для такой вещи подходит цена от ${rub(r.fair[0])} до ${rub(r.fair[1])}.`, 'ok');
+        $('#chk').parentElement.insertAdjacentHTML('beforeend', `<button class="btn coral" id="nx">${i + 1 < R.length ? 'Следующая вещь →' : 'Завершить'}</button>`);
+        $('#nx').onclick = () => { api.clear(); i++; i < R.length ? show() : api.finish('Чтобы назначить цену, посмотри похожие объявления и сравни состояние. Новая вещь стоит дороже, потёртая — дешевле. Слишком высокая цена отпугнёт покупателей, а слишком низкая — это потерянные деньги.'); };
+      };
+    };
+    show();
+  }
+},
+
+/* ---------- 14. Мастерская хобби ---------- */
+{
+  id: 'hobby', lesson: 4, icon: '🎨', title: 'Мастерская хобби', max: 40,
+  task: 'Люди продают рисунки, поделки и выпечку за реальные деньги. Угадай, сколько стоят такие работы, и придумай объявление о своей.',
+  play(api) {
+    const rng = ([a, b]) => `${a.toLocaleString('ru-RU')}–${b.toLocaleString('ru-RU')} ₽`;
+    const Q = shuffle([
+      { ico: '🐱', t: 'Детские рисунки питомцев', r: [500, 2000], o: [[10, 50], [500, 2000], [30000, 60000]] },
+      { ico: '🧶', t: 'Вязаные игрушки', r: [800, 3000], o: [[20, 80], [800, 3000], [40000, 90000]] },
+      { ico: '📿', t: 'Фенечки из бисера', r: [300, 700], o: [[5, 20], [300, 700], [10000, 20000]] },
+      { ico: '✒️', t: 'Красивые подписи открыток (каллиграфия)', r: [500, 1000], o: [[10, 30], [500, 1000], [25000, 50000]] },
+      { ico: '🧁', t: 'Авторские торты и капкейки', r: [2000, 5000], o: [[50, 100], [2000, 5000], [80000, 150000]] },
+    ]);
+    let k = 0;
+    const quiz = () => {
+      const q = Q[k]; let first = true;
+      api.stage.innerHTML = `
+        <p class="prob-step">Работа ${k + 1} из ${Q.length}</p>
+        <div class="exp-card"><div class="exp-ico">${q.ico}</div><h3>${q.t}</h3>
+          <p class="muted" style="margin:0;font-weight:700">Сколько стоят такие работы на сайтах объявлений?</p>
+          <div class="opts">${shuffle(q.o).map(o => `<button class="opt" data-a="${o[0]}">${rng(o)}</button>`).join('')}</div></div>`;
+      $$('.opt', api.stage).forEach(b => b.onclick = () => {
+        if (+b.dataset.a === q.r[0]) {
+          sfx.ok(); if (first) api.coin(4); b.classList.add('right');
+          $$('.opt', api.stage).forEach(x => x.disabled = true);
+          api.say(`Верно! ${q.t} продают примерно за ${rng(q.r)}.`, 'ok');
+          $('.exp-card', api.stage).insertAdjacentHTML('beforeend', `<div class="row" style="justify-content:center;margin-top:14px"><button class="btn coral" id="nx">${k + 1 < Q.length ? 'Следующая работа →' : 'Создать своё объявление →'}</button></div>`);
+          $('#nx').onclick = () => { api.clear(); k++; k < Q.length ? quiz() : make(); };
+        } else {
+          first = false; sfx.bad(); b.classList.add('wrong'); b.disabled = true;
+          api.say(+b.dataset.a < q.r[0] ? 'Это слишком дёшево: на работу уходит много времени и материалов.' : 'Это слишком дорого: за такие деньги никто не купит детскую работу.', 'bad');
+        }
+      });
+    };
+    const H = [
+      { t: 'Рисую питомцев', ico: '🐱', love: 'рисовать животных', offer: 'нарисую вашего питомца в милом детском стиле', r: [500, 2000] },
+      { t: 'Вяжу игрушки', ico: '🧶', love: 'вязать', offer: 'свяжу мягкую игрушку любого цвета', r: [800, 3000] },
+      { t: 'Плету фенечки', ico: '📿', love: 'плести из бисера', offer: 'сплету яркую фенечку с вашим именем', r: [300, 700] },
+      { t: 'Подписываю открытки', ico: '✒️', love: 'красиво писать', offer: 'красиво подпишу открытку к празднику', r: [500, 1000] },
+      { t: 'Пеку капкейки', ico: '🧁', love: 'печь', offer: 'испеку вместе с родителями капкейки к празднику', r: [2000, 5000] },
+    ];
+    const make = () => {
+      let h = null, first = true;
+      api.stage.innerHTML = `
+        <p class="lead">Придумай объявление о своей работе.</p>
+        <div class="studio">
+          <div>
+            <div class="field"><span>Моё хобби</span><div class="seg">${H.map((x, i) => `<button class="chip" data-i="${i}" aria-pressed="false">${x.ico} ${x.t}</button>`).join('')}</div></div>
+            <label class="field"><span>Твоё имя (только имя, без фамилии)</span><input id="hN" maxlength="20" value="${esc(S.name)}" autocomplete="off"></label>
+            <label class="field"><span>Что ты предлагаешь?</span><input id="hW" maxlength="90" placeholder="Сначала выбери хобби" autocomplete="off"></label>
+            <label class="field"><span>Цена, ₽</span><input id="hP" type="number" inputmode="numeric" min="0" placeholder="Например: 500"></label>
+            <p class="hint">🛡️ Не пиши в объявлении фамилию, адрес, школу и телефон. Публикуй объявления только вместе с родителями.</p>
+          </div>
+          <div>
+            <div class="adv-head">Так увидит покупатель</div>
+            <div class="adv"><div class="adv-img" id="pvI">🎨</div><div class="adv-body"><div class="adv-price" id="pvP"></div><div class="adv-title" id="pvT"></div><p class="adv-desc" id="pvD"></p></div></div>
+            <div class="row" style="margin-top:14px"><button class="btn primary" id="pub">Опубликовать</button></div>
+          </div>
+        </div>`;
+      const upd = () => {
+        const n = $('#hN').value.trim(), w = $('#hW').value.trim(), p = Number($('#hP').value);
+        $('#pvI').textContent = h ? h.ico : '🎨';
+        $('#pvP').textContent = p > 0 ? rub(p) : 'Цена не указана';
+        $('#pvT').textContent = h ? h.t.replace(/^\S+/, m => ({ 'Рисую': 'Нарисую', 'Вяжу': 'Свяжу', 'Плету': 'Сплету', 'Подписываю': 'Подпишу', 'Пеку': 'Испеку' }[m] || m)) + ' на заказ' : 'Моя работа';
+        $('#pvD').textContent = `Привет! Меня зовут ${n || '…'}. Я люблю ${h ? h.love : '…'} и ${w || '…'}. Отличный подарок или украшение интерьера! Стоимость — ${p > 0 ? rub(p) : '…'}.`;
+      };
+      $$('.seg .chip', api.stage).forEach(b => b.onclick = () => {
+        h = H[+b.dataset.i];
+        $$('.seg .chip', api.stage).forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+        $('#hW').value = h.offer; $('#hP').placeholder = 'Похожие работы стоят ' + rng(h.r);
+        sfx.tap(); upd();
+      });
+      ['hN', 'hW', 'hP'].forEach(id => $('#' + id).oninput = upd);
+      $('#pub').onclick = () => {
+        const n = $('#hN').value.trim(), w = $('#hW').value.trim(), p = Number($('#hP').value);
+        let err = '';
+        if (!h) err = 'Выбери своё хобби.';
+        else if (!n) err = 'Напиши своё имя.';
+        else if (/\d|@/.test(n) || /\d{5,}|@/.test(w)) err = 'Не пиши в объявлении телефон или почту! Связь с покупателем — только через сайт и вместе с родителями.';
+        else if (n.trim().split(/\s+/).length > 1) err = 'Достаточно одного имени, без фамилии.';
+        else if (w.length < 8) err = 'Расскажи подробнее, что ты сделаешь.';
+        else if (!(p > 0)) err = 'Укажи цену.';
+        else if (p < h.r[0] / 2) err = `Слишком дёшево! Похожие работы стоят от ${rub(h.r[0])}. Твой труд стоит больше.`;
+        else if (p > h.r[1] * 2) err = `Слишком дорого: похожие работы стоят до ${rub(h.r[1])}. Покупатели выберут других мастеров.`;
+        if (err) { first = false; sfx.bad(); api.say(err, 'bad'); return; }
+        sfx.ok(); api.coin(first ? 20 : 12);
+        api.finish('На хобби можно зарабатывать: рисунки, вязаные игрушки, фенечки и выпечку покупают за реальные деньги. Чтобы работу купили, сделай хорошее фото, напиши понятное описание и назначь честную цену, сравнив её с похожими работами.');
+      };
+      upd();
+    };
+    quiz();
+  }
+},
+
+/* ---------- 15. Безопасная сделка ---------- */
+{
+  id: 'safe', lesson: 4, icon: '🛡️', title: 'Безопасная сделка', max: 45,
+  task: 'Когда продаёшь вещи в интернете, важно не попасться мошенникам. Реши, безопасно это или опасно.',
+  play(api) {
+    const C = shuffle([
+      { w: '💳', t: 'Покупатель просит номер маминой карты и код из СМС, «чтобы перевести деньги».', bad: true, e: 'Код из СМС нельзя говорить никому, даже «сотруднику банка». Так воруют деньги с карты.' },
+      { w: '🔗', t: 'Покупатель присылает ссылку на незнакомый сайт «для получения оплаты».', bad: true, e: 'Такие ссылки ведут на поддельные сайты. Не открывай их и покажи родителям.' },
+      { w: '👨‍👩‍👧', t: 'Объявление размещено в аккаунте родителей, и они видят всю переписку.', bad: false, e: 'Так и нужно: взрослые помогут, если что-то пойдёт не так.' },
+      { w: '🌙', t: 'Покупатель предлагает встретиться вечером во дворе, один на один.', bad: true, e: 'Встречаться с незнакомцами одному нельзя. Только со взрослыми и в людном месте.' },
+      { w: '🏬', t: 'Передать вещь покупателю вместе с мамой в торговом центре.', bad: false, e: 'Людное место и взрослый рядом — безопасная встреча.' },
+      { w: '💬', t: 'Незнакомец пишет: «Давай перейдём в другой мессенджер, там обсудим».', bad: true, e: 'Мошенники уводят из сайта, чтобы их было не видно. Общайся только на сайте объявлений.' },
+      { w: '🙂', t: 'В объявлении указано только имя, без адреса, школы и телефона.', bad: false, e: 'Верно: личные данные посторонним знать не нужно.' },
+      { w: '📦', t: 'Незнакомец: «Отправь сначала вещь, а деньги я переведу потом».', bad: true, e: 'Можно остаться без вещи и без денег. Как получить оплату, решай вместе с родителями.' },
+      { w: '👀', t: 'Перед тем как ответить покупателю, ты показываешь его сообщение родителям.', bad: false, e: 'Отличная привычка! Взрослые быстро заметят обман.' },
+    ]);
+    let i = 0;
+    const show = () => {
+      const c = C[i];
+      api.stage.innerHTML = `
+        <p class="flag-count">Ситуация ${i + 1} из ${C.length}</p>
+        <div class="flag-card"><div class="who">${c.w}</div><p>${c.t}</p></div>
+        <div class="flag-btns">
+          <button class="flag-btn green" data-bad="0"><span>🛡️</span>Безопасно</button>
+          <button class="flag-btn red" data-bad="1"><span>⚠️</span>Опасно</button>
+        </div>`;
+      $$('.flag-btn', api.stage).forEach(b => b.onclick = () => {
+        $$('.flag-btn', api.stage).forEach(x => x.disabled = true);
+        const ok = (b.dataset.bad === '1') === c.bad;
+        if (ok) { sfx.ok(); api.coin(5); } else sfx.bad();
+        api.say(`${ok ? 'Верно!' : 'Не совсем.'} Это <b>${c.bad ? 'опасно' : 'безопасно'}</b>. ${c.e}`, ok ? 'ok' : 'bad');
+        $('.flag-btns', api.stage).insertAdjacentHTML('afterend', `<div class="row" style="justify-content:center;margin-top:16px"><button class="btn coral" id="nx">${i + 1 < C.length ? 'Следующая ситуация →' : 'Завершить'}</button></div>`);
+        $('#nx').onclick = () => { api.clear(); i++; i < C.length ? show() : api.finish('Правила безопасной продажи: продавай через аккаунт родителей, общайся только на сайте, никому не говори данные карты и коды из СМС, не открывай странные ссылки и встречайся с покупателем только вместе со взрослыми в людном месте.'); };
+      });
+    };
+    show();
+  }
+},
 ];
 STATIONS.forEach((s, i) => s.n = i + 1);
+const LESSONS = [
+  { n: 2, title: 'Остров Целей', desc: 'Отличаем мечту от цели, выбираем главную мечту и составляем план.' },
+  { n: 3, title: 'Остров Копилок', desc: 'Разбираемся, куда уходят деньги, как их копить и не попадаться на импульсивные покупки.' },
+  { n: 4, title: 'Остров Заработка', desc: 'Учимся продавать ненужные вещи, зарабатывать на хобби и делать это безопасно.' },
+];
 
 /* =========================================================
    ЭКРАНЫ
@@ -1133,7 +1504,7 @@ function showMap() {
       <div>
         <p class="eyebrow">${S.name ? 'Капитан ' + esc(S.name) : 'Капитан'}</p>
         <h1>Плыви от <em>мечты</em> к цели</h1>
-        <p>Проходи станции на двух островах, собирай монеты и учись управлять деньгами: ставить цели, копить и не тратить лишнего.</p>
+        <p>Проходи станции на островах, собирай монеты и учись управлять деньгами: ставить цели, копить, не тратить лишнего и зарабатывать.</p>
       </div>
       <div class="compass" style="--p:${done / STATIONS.length * 100}"><div class="compass-in"><b>${done}/${STATIONS.length}</b><small>станций</small></div></div>
     </section>
@@ -1143,15 +1514,15 @@ function showMap() {
       <p style="font-weight:700;margin:0">Все ${STATIONS.length} станций пройдены · собрано ${totalCoins()} монет</p>
       ${gl ? `<div class="cert-goal">Моя цель: ${esc(gl.what)} за ${rub(gl.cost)}.<br>Откладываю по ${rub(Math.ceil(gl.cost / (gl.months * 4)))} в неделю.</div>` : ''}
     </section>` : ''}
-    <section class="island">
-      <div class="island-head"><span class="tag">Урок 2</span><h2>Остров Целей</h2><p>Отличаем мечту от цели, выбираем главную мечту и составляем план.</p></div>
-      <ol class="route">${STATIONS.filter(s => s.lesson === 2).map(stop).join('')}</ol>
-    </section>
-    <div class="lesson-divider" role="separator"><span>Конец урока 2</span><span class="anchor" aria-hidden="true">⚓</span><span>Начало урока 3</span></div>
-    <section class="island second">
-      <div class="island-head"><span class="tag">Урок 3</span><h2>Остров Копилок</h2><p>Разбираемся, куда уходят деньги, как их копить и не попадаться на импульсивные покупки.</p></div>
-      <ol class="route">${STATIONS.filter(s => s.lesson === 3).map(stop).join('')}</ol>
-    </section>
+    ${LESSONS.map((L, idx) => {
+      const list = STATIONS.filter(s => s.lesson === L.n);
+      const d = list.filter(s => S.st[s.id]?.done).length;
+      return `${idx ? `<div class="lesson-divider" role="separator"><span>Конец урока ${LESSONS[idx - 1].n}</span><span class="anchor" aria-hidden="true">⚓</span><span>Начало урока ${L.n}</span></div>` : ''}
+    <section class="island ${idx % 2 ? 'second' : ''}">
+      <div class="island-head"><span class="tag">Урок ${L.n}</span><h2>${L.title}</h2><span class="island-count">Пройдено ${d} из ${list.length}</span><p>${L.desc}</p></div>
+      <ol class="route">${list.map(stop).join('')}</ol>
+    </section>`;
+    }).join('')}
     <footer class="foot" id="foot"><button class="btn" id="rename">Сменить имя</button><button class="btn" id="reset">Начать заново</button></footer>
   </div>`;
   bindTop();
@@ -1170,7 +1541,7 @@ function askName() {
   ov.innerHTML = `<form class="modal" id="nf">
     <div class="big" aria-hidden="true">⛵</div>
     <h2>Добро пожаловать на борт!</h2>
-    <p style="margin:0;font-weight:700">Впереди два острова и 10 станций. Как тебя зовут, капитан?</p>
+    <p style="margin:0;font-weight:700">Впереди ${LESSONS.length} острова и ${STATIONS.length} станций. Как тебя зовут, капитан?</p>
     <input class="inp" id="nm" maxlength="24" placeholder="Твоё имя" value="${esc(S.name)}" autocomplete="off" style="text-align:center;font-size:1.2rem">
     <button class="btn primary">Поплыли!</button>
   </form>`;
